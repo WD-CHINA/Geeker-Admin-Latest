@@ -1,41 +1,41 @@
-import { defineStore } from 'pinia'
-import type { AuthState } from '@/stores/interface/store'
-import { AccountAPI } from '@/api/account'
-import { getFlatMenuList, getShowMenuList, getAllBreadcrumbList } from '@/utils'
-import { useRoute } from 'vue-router'
-import { computed, reactive, toRefs } from 'vue'
+import { defineStore } from "pinia";
+import type { AuthState } from "@/stores/interface/store";
+import { AuthApi } from "@/api/auth";
+import { getFlatMenuList, getShowMenuList, getAllBreadcrumbList } from "@/utils";
+import { useRoute } from "vue-router";
+import { computed, reactive, toRefs } from "vue";
 
-export const useAuthStore = defineStore('geeker-auth', () => {
-  const route = useRoute()
+export const useAuthStore = defineStore("geeker-auth", () => {
+  const route = useRoute();
   const state = reactive<AuthState>({
     // 全部的按钮权限列表
     allAuthButtonList: {},
     // 菜单权限列表
     authMenuList: [],
     // 当前页面的 router name，用来做按钮权限筛选
-    routeName: '',
-  })
+    routeName: ""
+  });
 
   const authButtonList = computed(() => {
-    return state.allAuthButtonList[route.name as string] || []
-  })
+    return state.allAuthButtonList[route.name as string] || [];
+  });
 
-  const showMenuListGet = computed(() => getShowMenuList(state.authMenuList))
-  const flatMenuListGet = computed(() => getFlatMenuList(state.authMenuList))
-  const breadcrumbListGet = computed(() => getAllBreadcrumbList(state.authMenuList))
-  const authMenuListGet = computed(() => state.authMenuList)
+  const showMenuListGet = computed(() => getShowMenuList(state.authMenuList));
+  const flatMenuListGet = computed(() => getFlatMenuList(state.authMenuList));
+  const breadcrumbListGet = computed(() => getAllBreadcrumbList(state.authMenuList));
+  const authMenuListGet = computed(() => state.authMenuList);
 
   const actions = {
     async getAuthButtonList() {
-      state.allAuthButtonList = await AccountAPI.getUserButtons()
+      state.allAuthButtonList = AuthApi.getAuthButtonList();
     },
     async getAuthMenuList() {
-      state.authMenuList = await AccountAPI.getUserMenu()
+      state.authMenuList = AuthApi.getAuthMenuList();
     },
     async setRouteName(name: string) {
-      state.routeName = name
-    },
-  }
+      state.routeName = name;
+    }
+  };
 
   return {
     ...toRefs(state),
@@ -44,6 +44,6 @@ export const useAuthStore = defineStore('geeker-auth', () => {
     flatMenuListGet,
     breadcrumbListGet,
     authMenuListGet,
-    ...actions,
-  }
-})
+    ...actions
+  };
+});

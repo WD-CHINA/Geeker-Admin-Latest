@@ -1,4 +1,54 @@
 {
+  "login": {
+    "username": "用户名",
+    "password": "密码",
+    "login": "登录",
+    "auth": {
+      "error": "授权失败",
+      "params": "参数校验错误",
+      "encoding": "文档转码中，请稍后再试"
+    },
+    "loading": "登录中..."
+  },
+  "text": {
+    "tip": "提示",
+    "retry": "重试",
+    "quit": "退出",
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "preview": {
+    "title": "预览",
+    "welcome": "欢迎使用",
+    "error": "白板容器未找到",
+    "room": {
+      "error": "房间断开连接"
+    }
+  },
+  "toolbar": {
+    "mouse": "鼠标",
+    "select": "选择",
+    "pen": "涂鸦",
+    "shapeSelect": "图形选择",
+    "elementEraser": "橡皮擦",
+    "clear": "清空",
+    "undo": "撤销",
+    "redo": "重做",
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "firstPage": "第一页",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "lastPage": "最后一页",
+    "prevAnim": "上一动画",
+    "nextAnim": "下一动画",
+    "preview": "预览"
+  },
+  "api": {
+    "timeout": "请求超时！请您稍后重试",
+    "networkError": "网络错误！请您稍后重试",
+    "serviceUnavailable": "服务不可用"
+  },
   "common": {
     "add": "新增",
     "address": "居住地址",

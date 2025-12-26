@@ -1,4 +1,54 @@
 {
+  "login": {
+    "username": "Username",
+    "password": "Password",
+    "login": "Login",
+    "auth": {
+      "error": "Auth Error",
+      "params": "Params Error",
+      "encoding": "Document encoding, please try again later"
+    },
+    "loading": "Login..."
+  },
+  "text": {
+    "tip": "Tip",
+    "retry": "Retry",
+    "quit": "Quit",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "preview": {
+    "title": "Preview",
+    "welcome": "Welcome",
+    "error": "Whiteboard container not found",
+    "room": {
+      "error": "Room disconnected"
+    }
+  },
+  "toolbar": {
+    "mouse": "Mouse",
+    "select": "Select",
+    "pen": "Pen",
+    "shapeSelect": "Shape Select",
+    "elementEraser": "Eraser",
+    "clear": "Clear",
+    "undo": "Undo",
+    "redo": "Redo",
+    "zoomOut": "Zoom Out",
+    "zoomIn": "Zoom In",
+    "firstPage": "First Page",
+    "prevPage": "Previous Page",
+    "nextPage": "Next Page",
+    "lastPage": "Last Page",
+    "prevAnim": "Previous Animation",
+    "nextAnim": "Next Animation",
+    "preview": "Preview"
+  },
+  "api": {
+    "timeout": "Request timeout! Please try again later",
+    "networkError": "Network error! Please try again later",
+    "serviceUnavailable": "Service unavailable"
+  },
   "common": {
     "add": "Add",
     "address": "Address",

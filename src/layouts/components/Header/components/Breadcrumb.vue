@@ -3,11 +3,7 @@
     <el-breadcrumb :separator-icon="ArrowRight">
       <transition-group name="breadcrumb">
         <el-breadcrumb-item v-for="(item, index) in breadcrumbList" :key="item.path">
-          <div
-            class="el-breadcrumb__inner is-link"
-            :class="{ 'item-no-icon': !item.meta.icon }"
-            @click="onBreadcrumbClick(item, index)"
-          >
+          <div class="el-breadcrumb__inner is-link" :class="{ 'item-no-icon': !item.meta.icon }" @click="onBreadcrumbClick(item, index)">
             <el-icon v-if="item.meta.icon && globalStore.breadcrumbIcon" class="breadcrumb-icon">
               <component :is="item.meta.icon" />
             </el-icon>
@@ -20,34 +16,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { HOME_URL } from '@/config'
-import { useRoute, useRouter } from 'vue-router'
-import { ArrowRight } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/modules/auth'
-import { useGlobalStore } from '@/stores/modules/global'
-import type { MenuOptions } from '@/api/system/menu'
+import { computed } from "vue";
+import { HOME_URL } from "@/config";
+import { useRoute, useRouter } from "vue-router";
+import { ArrowRight } from "@element-plus/icons-vue";
+import { useAuthStore } from "@/stores/modules/auth";
+import { useGlobalStore } from "@/stores/modules/global";
+import type { MenuOptions } from "@/api/system/menu";
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const globalStore = useGlobalStore()
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const globalStore = useGlobalStore();
 
 const breadcrumbList = computed(() => {
-  let breadcrumbData = authStore.breadcrumbListGet[route.matched[route.matched.length - 1].path] ?? []
+  let breadcrumbData = authStore.breadcrumbListGet[route.matched[route.matched.length - 1].path] ?? [];
   // 🙅‍♀️不需要首页面包屑可删除以下判断
   if (breadcrumbData[0].path !== HOME_URL) {
-    breadcrumbData = [{ path: HOME_URL, meta: { icon: 'HomeFilled', title: '首页' } }, ...breadcrumbData]
+    breadcrumbData = [{ path: HOME_URL, meta: { icon: "HomeFilled", title: "首页" } }, ...breadcrumbData];
   }
-  return breadcrumbData
-})
+  return breadcrumbData;
+});
 
 // Click Breadcrumb
-const onBreadcrumbClick = (item: MenuOptions, index: number) => {
-  if (index !== breadcrumbList.value.length - 1) {
-    router.push(item.path)
+const onBreadcrumbClick = (item: MenuOptions, index: string | number) => {
+  const numIndex = typeof index === "string" ? parseInt(index) : index;
+  if (numIndex !== breadcrumbList.value.length - 1) {
+    router.push(item.path);
   }
-}
+};
 </script>
 
 <style scoped lang="scss">

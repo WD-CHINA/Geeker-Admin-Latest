@@ -32,14 +32,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "build/**/*.ts",
-    "build/**/*.d.ts",
-    "vite.config.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "build/**/*.ts", "build/**/*.d.ts", "vite.config.ts", "uno.config.ts", "eslint.config.*", "src/typings/*.d.ts"],
   "exclude": ["node_modules", "dist", "**/*.js"]
 }
