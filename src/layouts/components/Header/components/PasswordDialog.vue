@@ -12,14 +12,14 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'PasswordDialog',
-})
-import { ref } from 'vue'
+  name: "PasswordDialog"
+});
+import { ref } from "vue";
 
-const dialogVisible = ref(false)
+const dialogVisible = ref(false);
 const openDialog = () => {
-  dialogVisible.value = true
-}
+  dialogVisible.value = true;
+};
 
-defineExpose({ openDialog })
+defineExpose({ openDialog });
 </script>

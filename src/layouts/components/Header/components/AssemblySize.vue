@@ -3,12 +3,7 @@
     <tabler-layout class="cursor-pointer" />
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item
-          v-for="item in assemblySizeList"
-          :key="item.value"
-          :command="item.value"
-          :disabled="assemblySize === item.value"
-        >
+        <el-dropdown-item v-for="item in assemblySizeList" :key="item.value" :command="item.value" :disabled="assemblySize === item.value">
           {{ item.label }}
         </el-dropdown-item>
       </el-dropdown-menu>
@@ -18,26 +13,26 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'AssemblySize',
-})
-import { computed } from 'vue'
-import { useGlobalStore } from '@/stores/modules/global'
-import type { AssemblySizeType } from '@/stores/interface/store'
-import TablerLayout from '~icons/tabler/layout?width=20px&height=20px'
+  name: "AssemblySize"
+});
+import { computed } from "vue";
+import { useGlobalStore } from "@/stores/modules/global";
+import type { AssemblySizeType } from "@/stores/interface/store";
+import TablerLayout from "~icons/tabler/layout?width=20px&height=20px";
 
-const globalStore = useGlobalStore()
-const assemblySize = computed(() => globalStore.assemblySize)
+const globalStore = useGlobalStore();
+const assemblySize = computed(() => globalStore.assemblySize);
 
 const assemblySizeList = [
-  { label: '默认', value: 'default' },
-  { label: '大型', value: 'large' },
-  { label: '小型', value: 'small' },
-]
+  { label: "默认", value: "default" },
+  { label: "大型", value: "large" },
+  { label: "小型", value: "small" }
+];
 
 const setAssemblySize = (item: AssemblySizeType) => {
   if (assemblySize.value === item) {
-    return
+    return;
   }
-  globalStore.assemblySize = item
-}
+  globalStore.assemblySize = item;
+};
 </script>

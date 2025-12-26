@@ -23,7 +23,7 @@
                 <el-icon
                   :style="{
                     transform: popoverVisible ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'transform .5s',
+                    transition: 'transform .5s'
                   }"
                 >
                   <ArrowDown @click.stop="togglePopover" />
@@ -41,12 +41,7 @@
           <el-tab-pane label="SVG 图标" name="svg">
             <el-scrollbar height="300px">
               <ul class="icon-grid">
-                <li
-                  v-for="icon in filteredSvgIcons"
-                  :key="'svg-' + icon"
-                  class="icon-grid-item"
-                  @click="selectIcon(icon)"
-                >
+                <li v-for="icon in filteredSvgIcons" :key="'svg-' + icon" class="icon-grid-item" @click="selectIcon(icon)">
                   <el-tooltip :content="icon" placement="bottom" effect="light">
                     <div :class="`i-svg:${icon}`" />
                   </el-tooltip>
@@ -72,100 +67,96 @@
 </template>
 
 <script setup lang="ts">
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import { onClickOutside } from '@vueuse/core'
-import { computed, onMounted, ref } from 'vue'
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+import { onClickOutside } from "@vueuse/core";
+import { computed, onMounted, ref } from "vue";
 
 const props = defineProps({
   modelValue: {
     type: String,
-    default: '',
+    default: ""
   },
   width: {
     type: String,
-    default: '500px',
-  },
-})
+    default: "500px"
+  }
+});
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
-const iconSelectRef = ref()
-const popoverContentRef = ref()
-const popoverVisible = ref(false)
-const activeTab = ref('svg')
+const iconSelectRef = ref();
+const popoverContentRef = ref();
+const popoverVisible = ref(false);
+const activeTab = ref("svg");
 
-const svgIcons = ref<string[]>([])
-const elementIcons = ref<string[]>(Object.keys(ElementPlusIconsVue))
-const selectedIcon = defineModel('modelValue', {
+const svgIcons = ref<string[]>([]);
+const elementIcons = ref<string[]>(Object.keys(ElementPlusIconsVue));
+const selectedIcon = defineModel("modelValue", {
   type: String,
   required: true,
-  default: '',
-})
+  default: ""
+});
 
-const filterText = ref('')
-const filteredSvgIcons = ref<string[]>([])
-const filteredElementIcons = ref<string[]>(elementIcons.value)
+const filterText = ref("");
+const filteredSvgIcons = ref<string[]>([]);
+const filteredElementIcons = ref<string[]>(elementIcons.value);
 const isElementIcon = computed(() => {
-  return selectedIcon.value && selectedIcon.value.startsWith('el-icon')
-})
+  return selectedIcon.value && selectedIcon.value.startsWith("el-icon");
+});
 
 function loadIcons() {
-  const icons = import.meta.glob('../../assets/icons/*.svg')
+  const icons = import.meta.glob("../../assets/icons/*.svg");
   for (const path in icons) {
-    const iconName = path.replace(/.*\/(.*)\.svg$/, '$1')
-    svgIcons.value.push(iconName)
+    const iconName = path.replace(/.*\/(.*)\.svg$/, "$1");
+    svgIcons.value.push(iconName);
   }
-  filteredSvgIcons.value = svgIcons.value
+  filteredSvgIcons.value = svgIcons.value;
 }
 
 function handleTabClick(tabPane: any) {
-  activeTab.value = tabPane.props.name
-  filterIcons()
+  activeTab.value = tabPane.props.name;
+  filterIcons();
 }
 
 function filterIcons() {
-  if (activeTab.value === 'svg') {
-    filteredSvgIcons.value = filterText.value
-      ? svgIcons.value.filter(icon => icon.toLowerCase().includes(filterText.value.toLowerCase()))
-      : svgIcons.value
+  if (activeTab.value === "svg") {
+    filteredSvgIcons.value = filterText.value ? svgIcons.value.filter(icon => icon.toLowerCase().includes(filterText.value.toLowerCase())) : svgIcons.value;
   } else {
-    filteredElementIcons.value = filterText.value
-      ? elementIcons.value.filter(icon => icon.toLowerCase().includes(filterText.value.toLowerCase()))
-      : elementIcons.value
+    filteredElementIcons.value = filterText.value ? elementIcons.value.filter(icon => icon.toLowerCase().includes(filterText.value.toLowerCase())) : elementIcons.value;
   }
 }
 
 function selectIcon(icon: string) {
-  const iconName = activeTab.value === 'element' ? 'el-icon-' + icon : icon
-  emit('update:modelValue', iconName)
-  popoverVisible.value = false
+  const iconName = activeTab.value === "element" ? "el-icon-" + icon : icon;
+  emit("update:modelValue", iconName);
+  popoverVisible.value = false;
 }
 
 function togglePopover() {
-  popoverVisible.value = !popoverVisible.value
+  popoverVisible.value = !popoverVisible.value;
 }
 
 onClickOutside(iconSelectRef, () => (popoverVisible.value = false), {
-  ignore: [popoverContentRef],
-})
+  ignore: [popoverContentRef]
+});
 
 /**
  * 清空已选图标
  */
 function clearSelectedIcon() {
-  selectedIcon.value = ''
+  selectedIcon.value = "";
 }
 
 onMounted(() => {
-  loadIcons()
+  loadIcons();
   if (selectedIcon.value) {
-    if (elementIcons.value.includes(selectedIcon.value.replace('el-icon-', ''))) {
-      activeTab.value = 'element'
+    if (elementIcons.value.includes(selectedIcon.value.replace("el-icon-", ""))) {
+      activeTab.value = "element";
     } else {
-      activeTab.value = 'svg'
+      activeTab.value = "svg";
     }
   }
-})
+});
 </script>
 
 <style scoped lang="scss">

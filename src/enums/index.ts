@@ -7,5 +7,5 @@
 export enum ProTablePaginationEnum {
   FE = -1,
   NONE = 0,
-  BE = 1,
+  BE = 1
 }

@@ -18,12 +18,7 @@
             </template>
             <sub-menu :menu-list="subItem.children" />
           </el-sub-menu>
-          <el-menu-item
-            v-else
-            :key="subItem.path + 'el-menu-item'"
-            :index="subItem.path"
-            @click="handleClickMenu(subItem)"
-          >
+          <el-menu-item v-else :key="subItem.path + 'el-menu-item'" :index="subItem.path" @click="handleClickMenu(subItem)">
             <el-icon>
               <component :is="subItem.meta.icon" />
             </el-icon>
@@ -41,32 +36,32 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'LayoutTransverse',
-})
-import { computed } from 'vue'
-import { useAuthStore } from '@/stores/modules/auth'
-import { useRoute, useRouter } from 'vue-router'
-import MainContainer from '@/layouts/components/Main/index.vue'
-import ToolBarRight from '@/layouts/components/Header/ToolBarRight.vue'
-import SubMenu from '@/layouts/components/Menu/SubMenu.vue'
-import type { MenuOptions } from '@/api/system/menu'
+  name: "LayoutTransverse"
+});
+import { computed } from "vue";
+import { useAuthStore } from "@/stores/modules/auth";
+import { useRoute, useRouter } from "vue-router";
+import MainContainer from "@/layouts/components/Main/index.vue";
+import ToolBarRight from "@/layouts/components/Header/ToolBarRight.vue";
+import SubMenu from "@/layouts/components/Menu/SubMenu.vue";
+import type { MenuOptions } from "@/api/system/menu";
 
-const title = import.meta.env.VITE_GLOB_APP_TITLE
+const title = import.meta.env.VITE_GLOB_APP_TITLE;
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const menuList = computed(() => authStore.showMenuListGet)
-const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string)
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const menuList = computed(() => authStore.showMenuListGet);
+const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string);
 
 const handleClickMenu = (subItem: MenuOptions) => {
   if (subItem.meta.isLink) {
-    return window.open(subItem.meta.isLink, '_blank')
+    return window.open(subItem.meta.isLink, "_blank");
   }
-  router.push(subItem.path)
-}
+  router.push(subItem.path);
+};
 </script>
 
 <style scoped lang="scss">
-@use './index';
+@use "./index";
 </style>

@@ -50,7 +50,7 @@ export default [
       "*.d.ts",
       "**/coverage",
       "**/dist",
-      "**/geeker-admin",
+      "**/isport-resource-platform",
       "vite.config.ts",
       "mock/**",
       "src/types/**",

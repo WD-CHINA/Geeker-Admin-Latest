@@ -17,8 +17,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-geeker-admin
-geeker-admin.zip
+isport-resource-platform
+isport-resource-platform.zip
 stats.html
 *.local
 

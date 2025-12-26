@@ -22,20 +22,20 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'SubMenu',
-})
-import type { MenuOptions } from '@/api/system/menu'
-import { useRouter } from 'vue-router'
+  name: "SubMenu"
+});
+import type { MenuOptions } from "@/api/system/menu";
+import { useRouter } from "vue-router";
 
-defineProps<{ menuList: MenuOptions[] }>()
+defineProps<{ menuList: MenuOptions[] }>();
 
-const router = useRouter()
+const router = useRouter();
 const handleClickMenu = (subItem: MenuOptions) => {
   if (subItem.meta.isLink) {
-    return window.open(subItem.meta.isLink, '_blank')
+    return window.open(subItem.meta.isLink, "_blank");
   }
-  router.push(subItem.path)
-}
+  router.push(subItem.path);
+};
 </script>
 
 <style lang="scss">
@@ -63,7 +63,7 @@ const handleClickMenu = (subItem: MenuOptions) => {
       top: 0;
       bottom: 0;
       width: 4px;
-      content: '';
+      content: "";
       background-color: var(--el-color-primary);
     }
   }

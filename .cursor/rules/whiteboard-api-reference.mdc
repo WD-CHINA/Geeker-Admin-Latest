@@ -1,0 +1,348 @@
+---
+description: 网易云信白板SDK快速API参考
+globs: ["**/*whiteboard*", "**/*board*"]
+alwaysApply: false
+---
+
+# 网易云信白板SDK快速API参考
+
+基于[官方文档v3.9.15](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/index.html)的快速参考指南。
+
+## 核心模块速查
+
+### WhiteBoardSDK 主实例
+基于[官方WhiteBoardSDKInstance接口](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/interfaces/WhiteBoardSDK.WhiteBoardSDKInstance.html)：
+
+```typescript
+// 创建实例
+const sdk = WhiteBoardSDK.getInstance(options)
+
+// === 房间管理 ===
+sdk.joinRoom(opt: {
+  channel: string;                    // 房间名称
+  persistent?: boolean;               // 是否持久化房间(仅G2支持)
+  channelDestroyTime?: number;        // 房间销毁时间(Unix时间戳)
+}, callback: {
+  ondisconnected?: (error?) => void;  // 断开连接回调
+  onwillreconnect?: () => void;       // 即将重连回调  
+  onconnected?: () => void;           // 连接成功回调
+  onSyncStart?: () => void;           // 开始同步回调
+  onSyncFinish?: () => void;          // 同步完成回调
+}): Promise<DrawPlugin>
+
+// === 生命周期管理 ===
+sdk.destroy()                         // 销毁SDK，断开连接
+
+// === 状态查询 ===
+sdk.getUid(): number                  // 获取当前用户UID
+sdk.getChannelId(): string            // 获取频道ID(用于录像获取)
+sdk.isConnected(): boolean            // 检查连接状态
+sdk.isSynchronizing(): boolean        // 检查同步状态
+
+// === Toast操作 ===
+WhiteBoardSDK.showToast(options: {
+  type: 'info' | 'error' | 'success'; // Toast类型
+  msg: string;                        // 显示消息
+  time: number;                       // 显示时间(ms)
+})
+WhiteBoardSDK.hideToast()             // 隐藏Toast
+WhiteBoardSDK.interceptShowToast(fn)  // 拦截Toast显示
+WhiteBoardSDK.removeToastIntercept()  // 移除Toast拦截
+```
+
+### DrawPlugin 绘制核心
+```typescript
+// === 基本操作 ===
+drawPlugin.enableDraw(true)           // 启用/禁用绘制
+drawPlugin.setAppConfig(config)       // 设置应用配置
+drawPlugin.setShowCursor(true)        // 设置鼠标广播
+
+// === 画布操作 ===
+drawPlugin.clear()                    // 清空画布
+drawPlugin.undo()                     // 撤销
+drawPlugin.redo()                     // 重做
+drawPlugin.duplicate()                // 复制选中元素
+drawPlugin.setTool(toolName)          // 设置工具
+drawPlugin.setStrokeColor(type, color) // 设置颜色
+drawPlugin.setStrokeWidth(type, width) // 设置线宽
+
+// === 文档操作 ===
+drawPlugin.addDoc(options)            // 添加静态文档
+drawPlugin.addTransDoc(options)       // 添加动态PPT
+drawPlugin.addBoard(name, pageCount)  // 添加空白Board
+drawPlugin.gotoBoard(boardName)       // 跳转Board
+drawPlugin.deleteBoard(boardName)     // 删除Board
+drawPlugin.getBoardInfos()            // 获取Board信息
+drawPlugin.hasTransDoc()              // 是否为动态文档
+drawPlugin.exportBoards(options)      // 导出白板
+drawPlugin.importBoards(options)      // 导入白板
+
+// === 页面操作 ===
+drawPlugin.addPage(options)           // 添加页面
+drawPlugin.gotoPage(index)            // 跳转页面
+drawPlugin.gotoFirstPage()            // 第一页
+drawPlugin.gotoLastPage()             // 最后一页
+drawPlugin.gotoNextPage()             // 下一页
+drawPlugin.gotoPrevPage()             // 上一页
+drawPlugin.deletePage(index)          // 删除页面
+drawPlugin.getPageInfos()             // 获取页面信息
+
+// === 动画操作（PPT） ===
+drawPlugin.nextAnim()                 // 下一动画
+drawPlugin.prevAnim()                 // 上一动画
+drawPlugin.gotoAnim(options)          // 跳转动画
+drawPlugin.getAnimInfos()             // 获取动画信息
+drawPlugin.hasBackground()            // 检查背景
+
+// === 视角操作 ===
+drawPlugin.fitToContent(animate)      // 适配内容
+drawPlugin.fitToDoc(animate)          // 适配文档
+drawPlugin.resetCamera(animate)       // 重置视角
+drawPlugin.setCameraBound(bound, animate) // 设置视角
+drawPlugin.zoomIn()                   // 放大
+drawPlugin.zoomOut()                  // 缩小
+drawPlugin.zoomTo(scale, animate)     // 缩放到指定倍数
+
+// === 视角同步 ===
+drawPlugin.setSelfAsBroadcaster()     // 设为主播
+drawPlugin.unsetSelfAsBroadcaster()   // 停止主播
+drawPlugin.setSelfAsFollower()        // 跟随主播
+drawPlugin.setSelfAsFreeObserver()    // 自由观看
+
+// === 媒体操作 ===
+drawPlugin.addImage(options)          // 添加图片
+drawPlugin.addVideo(options)          // 添加视频
+drawPlugin.addAudio(options)          // 添加音频
+drawPlugin.setPageBackground(options) // 设置页面背景
+
+// === 导出功能 ===
+drawPlugin.exportAsImage(options)     // 导出为图片
+drawPlugin.exportAsBase64String(options) // 导出Base64
+drawPlugin.exportBoardAsStr(options, callbacks) // 导出字符串
+
+// === 自定义背景 ===
+drawPlugin.setCustomBackground(coordinate, fn, name) // 设置自定义背景
+drawPlugin.unsetCustomBackground()    // 取消自定义背景
+drawPlugin.getBgRendererName()        // 获取背景名称
+
+// === 流操作 ===
+drawPlugin.getStream(options)         // 获取视频流
+drawPlugin.updateStream(options)      // 更新流参数
+drawPlugin.stopStream()               // 停止流
+
+// === 状态查询 ===
+drawPlugin.getUndoCount()             // 可撤销次数
+drawPlugin.getRedoCount()             // 可重做次数
+drawPlugin.isClearAvailable()         // 是否可清空
+drawPlugin.getSelectedIds()           // 选中元素ID
+drawPlugin.getZoomFactor()            // 缩放倍数
+drawPlugin.getCurrTool()              // 当前工具
+drawPlugin.getDefStyles()             // 默认样式
+```
+
+### ToolCollection 工具栏
+```typescript
+// 创建工具栏
+const toolCollection = ToolCollection.getInstance(options)
+
+// === 主要控制 ===
+toolCollection.show()                 // 显示工具栏
+toolCollection.hide()                 // 隐藏工具栏
+
+// === 工具管理 ===
+toolCollection.setContainerOptions(containers) // 批量配置
+toolCollection.addOrSetTool(options)  // 添加/设置工具
+toolCollection.removeTool(options)    // 移除工具
+toolCollection.addOrSetSubItem(options) // 添加子项
+toolCollection.removeSubItem(options) // 移除子项
+toolCollection.setVisibility(options) // 设置可见性
+toolCollection.setItemDefaultSize(size) // 设置默认大小
+
+// === 文档弹窗 ===
+toolCollection.setDefaultDocList(list) // 设置默认文档列表
+toolCollection.addDoc(options)        // 添加文档
+toolCollection.deleteDoc(options)     // 删除文档
+
+// === 事件处理 ===
+toolCollection.on(eventName, callback) // 注册事件
+toolCollection.off(eventName, callback) // 注销事件
+```
+
+### RecordPlayer 录像回放
+```typescript
+// 创建回放实例
+RecordPlayer.getInstance(options).then(player => {
+  // === 播放控制 ===
+  player.play()                       // 播放
+  player.pause()                      // 暂停
+  player.seekTo(time)                 // 跳转时间
+
+  // === 设置 ===
+  player.setPlaySpeed(speed)          // 设置播放速度
+  player.setViewer(uid)               // 设置观看视角
+  player.setTimeRange(start, end)     // 设置时间范围
+  
+  // === UI控制 ===
+  player.bindControlContainer(element) // 绑定控制UI
+  
+  // === 生命周期 ===
+  player.destroy()                    // 销毁播放器
+  
+  // === 事件监听 ===
+  player.on(eventName, callback)     // 注册事件
+})
+```
+
+## 常用事件类型
+
+### DrawPlugin 事件
+```typescript
+// 应用状态变化
+drawPlugin.on('event:appState:change', (stateName, value) => {
+  // stateName 可能的值:
+  // 'board' - Board变化
+  // 'page' - 页面变化  
+  // 'zoomFactor' - 缩放变化
+  // 'currTool' - 工具变化
+  // 'vision' - 视角变化
+  // 'selectChange' - 选择变化
+  // 'styleUpdate' - 样式更新
+  // 'clearAvailable' - 清空可用性
+  // 'undoCount' - 撤销次数
+  // 'redoCount' - 重做次数
+})
+
+// 资源加载
+drawPlugin.on('event:resource:onload', (resource) => {
+  // resource.type: 'image' | 'video' | 'audio'
+  // resource.loaded: boolean
+  // resource.url: string
+})
+
+// 导入白板
+drawPlugin.on('event:importBoard', (action) => {
+  // action: 'start' | 'finish'
+})
+```
+
+### ToolCollection 事件
+```typescript
+// 文档添加
+toolCollection.on('docAdd', (docList, allDocs) => {
+  // 处理文档添加事件
+})
+
+// 其他工具栏事件...
+```
+
+## 数据结构速查
+
+### IBoardInfos
+```typescript
+interface IBoardInfos {
+  currBoard: string              // 当前Board名称
+  currBoardDisplayName: string   // 当前Board显示名称
+  boardNames: string[]           // 所有Board名称
+  boardDisplayNames: string[]    // 所有Board显示名称
+}
+```
+
+### IPageInfos
+```typescript
+interface IPageInfos {
+  activeIndex: number            // 当前页面索引
+  pagePayloads: Array<any>       // 页面数据数组
+}
+```
+
+### IAppConfig (常用配置)
+```typescript
+interface IAppConfig {
+  presetId?: number             // 预设ID
+  previewMode?: 'fitDoc'        // 预览模式
+  canvasBgColor?: string        // 背景色
+  showImportProgress?: boolean   // 显示导入进度
+}
+```
+
+## 快速开始模板
+
+### 基础初始化
+```typescript
+import { onMounted, onUnmounted, shallowRef } from 'vue'
+
+const whiteboardSDK = shallowRef<WhiteBoardSDKInstance | null>(null)
+const toolCollection = shallowRef<ToolCollectionInstance | null>(null)
+
+onMounted(async () => {
+  // 1. 创建SDK
+  whiteboardSDK.value = WhiteBoardSDK.getInstance({
+    appKey: authStore.authParams?.appKey as string,
+    uid: Math.ceil(Math.random() * 10000000),
+    container: document.getElementById('whiteboard'),
+    platform: 'web',
+    record: false,
+    debug: false,
+    getAuthInfo: () => Promise.resolve({
+      nonce: Math.random().toString(36).substring(2),
+      channelDestroyTime: 0,
+      checksum: 'your-checksum',
+      curTime: Math.round(Date.now() / 1000)
+    })
+  })
+
+  // 2. 加入房间
+  const drawPlugin = await whiteboardSDK.value.joinRoom({
+    channel: 'test-room',
+    persistent: false
+  }, {
+    ondisconnected: () => console.log('断开连接'),
+    onconnected: () => console.log('连接成功')
+  })
+
+  // 3. 设置工具栏
+  toolCollection.value = ToolCollection.getInstance({
+    container: document.getElementById('whiteboard'),
+    handler: drawPlugin,
+    options: { platform: 'web' }
+  })
+  toolCollection.value.show()
+
+  // 4. 配置白板
+  drawPlugin.enableDraw(true)
+  drawPlugin.fitToContent(true)
+})
+
+onUnmounted(() => {
+  whiteboardSDK.value?.destroy()
+  toolCollection.value?.hide()
+})
+```
+
+### 常用操作组合
+```typescript
+// 添加PPT并跳转
+const boardName = drawPlugin.addTransDoc({
+  docName: '课件.pptx',
+  pageCount: 20,
+  width: 960,
+  height: 540,
+  url: 'https://your-ppt-url.json'
+})
+drawPlugin.gotoBoard(boardName)
+
+// 页面导航
+drawPlugin.gotoNextPage()    // 下一页
+drawPlugin.nextAnim()        // 下一动画（PPT）
+
+// 视角控制
+drawPlugin.fitToDoc(true)    // 适配文档
+drawPlugin.zoomTo(1.5, true) // 缩放150%
+
+// 绘制控制
+drawPlugin.setTool('pen')    // 设置画笔
+drawPlugin.setStrokeColor('pen', '#ff0000') // 红色
+drawPlugin.setStrokeWidth('pen', 3)         // 线宽3
+```
+
+这个快速参考涵盖了网易云信白板SDK的所有核心API，可以作为开发时的快速查询工具。

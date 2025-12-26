@@ -26,27 +26,11 @@
 
                   <!-- components -->
                   <template v-else-if="item.type === 'custom'">
-                    <slot
-                      :name="item.slotName ?? item.prop"
-                      :prop="item.prop"
-                      :form-data="formData"
-                      :attrs="item.attrs"
-                    ></slot>
+                    <slot :name="item.slotName ?? item.prop" :prop="item.prop" :form-data="formData" :attrs="item.attrs"></slot>
                   </template>
-                  <component
-                    :is="componentMap.get(item.type!)"
-                    v-else
-                    v-model.trim="formData[item.prop]"
-                    v-bind="{ style: { width: '100%' }, ...item.attrs }"
-                  >
+                  <component :is="componentMap.get(item.type!)" v-else v-model.trim="formData[item.prop]" v-bind="{ style: { width: '100%' }, ...item.attrs }">
                     <template v-if="['select', 'radio', 'checkbox'].includes(item.type!)">
-                      <component
-                        :is="childrenMap.get(item.type!)"
-                        v-for="opt in item.options"
-                        :key="opt.value"
-                        :label="opt.label"
-                        :value="opt.value"
-                      ></component>
+                      <component :is="childrenMap.get(item.type!)" v-for="opt in item.options" :key="opt.value" :label="opt.label" :value="opt.value"></component>
                     </template>
 
                     <template v-if="item?.slotName && $slots[item.slotName]" #[item.slotName]>
@@ -61,17 +45,13 @@
 
         <template #footer>
           <el-button v-if="!formDisable" type="primary" :loading="isLoading" @click="handleSubmit">确 定</el-button>
-          <el-button @click="handleClose">{{ !formDisable ? '取 消' : '关闭' }}</el-button>
+          <el-button @click="handleClose">{{ !formDisable ? "取 消" : "关闭" }}</el-button>
         </template>
       </el-drawer>
     </template>
     <!-- dialog -->
     <template v-else>
-      <el-dialog
-        v-model="modalVisible"
-        v-bind="{ destroyOnClose: true, alignCenter: true, ...modalConfig.dialog }"
-        @close="handleClose"
-      >
+      <el-dialog v-model="modalVisible" v-bind="{ destroyOnClose: true, alignCenter: true, ...modalConfig.dialog }" @close="handleClose">
         <el-form ref="formRef" v-bind="form" :model="formData" :rules="formRules">
           <el-scrollbar max-height="70vh" :view-style="{ overflowX: 'hidden' }">
             <el-row :gutter="20">
@@ -94,27 +74,11 @@
                     <component :is="item.render" v-if="item.render" :row="formData" />
 
                     <template v-else-if="item.type === 'custom'">
-                      <slot
-                        :name="item.slotName ?? item.prop"
-                        :prop="item.prop"
-                        :form-data="formData"
-                        :attrs="item.attrs"
-                      ></slot>
+                      <slot :name="item.slotName ?? item.prop" :prop="item.prop" :form-data="formData" :attrs="item.attrs"></slot>
                     </template>
-                    <component
-                      :is="componentMap.get(item.type!)"
-                      v-else
-                      v-model.trim="formData[item.prop]"
-                      v-bind="{ style: { width: '100%' }, ...item.attrs }"
-                    >
+                    <component :is="componentMap.get(item.type!)" v-else v-model.trim="formData[item.prop]" v-bind="{ style: { width: '100%' }, ...item.attrs }">
                       <template v-if="['select', 'radio', 'checkbox'].includes(item.type!)">
-                        <component
-                          :is="childrenMap.get(item.type!)"
-                          v-for="opt in item.options"
-                          :key="opt.value"
-                          :label="opt.label"
-                          :value="opt.value"
-                        ></component>
+                        <component :is="childrenMap.get(item.type!)" v-for="opt in item.options" :key="opt.value" :label="opt.label" :value="opt.value"></component>
                       </template>
 
                       <template v-if="item?.slotName && $slots[item.slotName]" #[item.slotName]>
@@ -131,7 +95,7 @@
 
         <template #footer>
           <el-button v-if="!formDisable" type="primary" :loading="isLoading" @click="handleSubmit">确 定</el-button>
-          <el-button @click="handleClose">{{ !formDisable ? '取 消' : '关闭' }}</el-button>
+          <el-button @click="handleClose">{{ !formDisable ? "取 消" : "关闭" }}</el-button>
         </template>
       </el-dialog>
     </template>
@@ -139,148 +103,128 @@
 </template>
 
 <script setup lang="ts">
-import { useThrottleFn } from '@vueuse/core'
-import {
-  ElCascader,
-  ElCheckbox,
-  ElCheckboxGroup,
-  ElDatePicker,
-  ElInput,
-  ElInputNumber,
-  ElMessage,
-  ElOption,
-  ElRadio,
-  ElRadioGroup,
-  ElSelect,
-  ElSwitch,
-  ElText,
-  ElTimePicker,
-  ElTimeSelect,
-  ElTreeSelect,
-  type FormProps,
-  type FormInstance,
-  type FormRules,
-} from 'element-plus'
-import type { IComponentType, IModalConfig } from '../interface'
-import InputTag from './InputTag.vue'
-import IconSelect from './IconSelect.vue'
-import { markRaw, onMounted, reactive, ref } from 'vue'
+import { useThrottleFn } from "@vueuse/core";
+import { ElCascader, ElCheckbox, ElCheckboxGroup, ElDatePicker, ElInput, ElInputNumber, ElMessage, ElOption, ElRadio, ElRadioGroup, ElSelect, ElSwitch, ElText, ElTimePicker, ElTimeSelect, ElTreeSelect, type FormProps, type FormInstance, type FormRules } from "element-plus";
+import type { IComponentType, IModalConfig } from "../interface";
+import InputTag from "./InputTag.vue";
+import IconSelect from "./IconSelect.vue";
+import { markRaw, onMounted, reactive, ref } from "vue";
 
-defineOptions({ name: 'ProModal' })
+defineOptions({ name: "ProModal" });
 
-defineSlots<{ [key: string]: (_args: any) => any }>()
+defineSlots<{ [key: string]: (_args: any) => any }>();
 // 定义接收的属性
-const props = defineProps<{ modalConfig: IModalConfig }>()
+const props = defineProps<{ modalConfig: IModalConfig }>();
 // 自定义事件
-const emit = defineEmits<{ submitClick: []; customSubmit: [queryParams: IObject] }>()
+const emit = defineEmits<{ submitClick: []; customSubmit: [queryParams: IObject] }>();
 // 组件映射表
 
 const componentMap = new Map<IComponentType, any>([
-  ['input', markRaw(ElInput)],
-  ['select', markRaw(ElSelect)],
-  ['switch', markRaw(ElSwitch)],
-  ['cascader', markRaw(ElCascader)],
-  ['input-number', markRaw(ElInputNumber)],
-  ['input-tag', markRaw(InputTag)],
-  ['time-picker', markRaw(ElTimePicker)],
-  ['time-select', markRaw(ElTimeSelect)],
-  ['date-picker', markRaw(ElDatePicker)],
-  ['tree-select', markRaw(ElTreeSelect)],
-  ['custom-tag', markRaw(InputTag)],
-  ['text', markRaw(ElText)],
-  ['radio', markRaw(ElRadioGroup)],
-  ['checkbox', markRaw(ElCheckboxGroup)],
-  ['icon-select', markRaw(IconSelect)],
-  ['custom', ''],
-])
+  ["input", markRaw(ElInput)],
+  ["select", markRaw(ElSelect)],
+  ["switch", markRaw(ElSwitch)],
+  ["cascader", markRaw(ElCascader)],
+  ["input-number", markRaw(ElInputNumber)],
+  ["input-tag", markRaw(InputTag)],
+  ["time-picker", markRaw(ElTimePicker)],
+  ["time-select", markRaw(ElTimeSelect)],
+  ["date-picker", markRaw(ElDatePicker)],
+  ["tree-select", markRaw(ElTreeSelect)],
+  ["custom-tag", markRaw(InputTag)],
+  ["text", markRaw(ElText)],
+  ["radio", markRaw(ElRadioGroup)],
+  ["checkbox", markRaw(ElCheckboxGroup)],
+  ["icon-select", markRaw(IconSelect)],
+  ["custom", ""]
+]);
 const childrenMap = new Map<IComponentType, any>([
-  ['select', markRaw(ElOption)],
-  ['radio', markRaw(ElRadio)],
-  ['checkbox', markRaw(ElCheckbox)],
-])
+  ["select", markRaw(ElOption)],
+  ["radio", markRaw(ElRadio)],
+  ["checkbox", markRaw(ElCheckbox)]
+]);
 
-const pk = props.modalConfig.pk ?? 'id' // 主键名，用于表单数据处理
-const modalVisible = ref(false) // 弹窗显示状态
-const formRef = ref<FormInstance>() // 表单实例
-const formItems = reactive(props.modalConfig.formItems ?? []) // 表单配置项
-const formData = reactive<IObject>({}) // 表单数据
-const formRules: FormRules = {} // 表单验证规则
-const formDisable = ref(false) // 表单禁用状态
+const pk = props.modalConfig.pk ?? "id"; // 主键名，用于表单数据处理
+const modalVisible = ref(false); // 弹窗显示状态
+const formRef = ref<FormInstance>(); // 表单实例
+const formItems = reactive(props.modalConfig.formItems ?? []); // 表单配置项
+const formData = reactive<IObject>({}); // 表单数据
+const formRules: FormRules = {}; // 表单验证规则
+const formDisable = ref(false); // 表单禁用状态
 
-const isLoading = ref(false)
+const isLoading = ref(false);
 
-const form = ref<Partial<Omit<FormProps, 'model' | 'rules'>>>({})
+const form = ref<Partial<Omit<FormProps, "model" | "rules">>>({});
 // 获取tooltip提示框属性
 const getTooltipProps = (tips: string | IObject) => {
-  return typeof tips === 'string' ? { content: tips } : tips
-}
+  return typeof tips === "string" ? { content: tips } : tips;
+};
 // 隐藏弹窗
 const handleClose = () => {
-  modalVisible.value = false
-  formRef.value?.resetFields()
-}
+  modalVisible.value = false;
+  formRef.value?.resetFields();
+};
 // 设置表单值
 const setFormData = (data: IObject) => {
   for (const key in formData) {
     if (Object.prototype.hasOwnProperty.call(formData, key) && key in data) {
-      formData[key] = data[key]
+      formData[key] = data[key];
     }
   }
   if (Object.prototype.hasOwnProperty.call(data, pk)) {
-    formData[pk] = data[pk]
+    formData[pk] = data[pk];
   }
-}
+};
 // 表单提交
 const handleSubmit = useThrottleFn(() => {
   formRef.value?.validate(async (valid: boolean) => {
     if (!valid) {
-      return
+      return;
     }
-    if (typeof props.modalConfig.beforeSubmit === 'function') {
-      props.modalConfig.beforeSubmit(formData)
+    if (typeof props.modalConfig.beforeSubmit === "function") {
+      props.modalConfig.beforeSubmit(formData);
     }
     if (!props.modalConfig?.formAction) {
-      emit('customSubmit', formData)
-      handleClose()
-      return
+      emit("customSubmit", formData);
+      handleClose();
+      return;
     }
-    isLoading.value = true
+    isLoading.value = true;
 
     try {
-      await props.modalConfig.formAction(formData)
-      if (props.modalConfig.component === 'drawer') {
-        ElMessage.success(`${props.modalConfig.drawer?.title}成功`)
+      await props.modalConfig.formAction(formData);
+      if (props.modalConfig.component === "drawer") {
+        ElMessage.success(`${props.modalConfig.drawer?.title}成功`);
       } else {
-        ElMessage.success(`${props.modalConfig.dialog?.title}成功`)
+        ElMessage.success(`${props.modalConfig.dialog?.title}成功`);
       }
-      emit('submitClick')
-      isLoading.value = false
-      handleClose()
+      emit("submitClick");
+      isLoading.value = false;
+      handleClose();
     } catch (error: any) {
-      ElMessage.error(error)
+      ElMessage.error(error);
     } finally {
-      isLoading.value = false
+      isLoading.value = false;
     }
-  })
-}, 3000)
+  });
+}, 3000);
 
 onMounted(() => {
   formItems.forEach(item => {
     if (item.initFn) {
-      item.initFn(item)
+      item.initFn(item);
     }
-    formRules[item.prop] = item?.rules ?? []
-    form.value = { labelWidth: 'auto', ...props.modalConfig?.form }
+    formRules[item.prop] = item?.rules ?? [];
+    form.value = { labelWidth: "auto", ...props.modalConfig?.form };
 
-    if (['input-tag', 'custom-tag', 'cascader'].includes(item.type!)) {
-      formData[item.prop] = Array.isArray(item.initialValue) ? item.initialValue : []
-    } else if (item.type === 'input-number') {
-      formData[item.prop] = item.initialValue ?? null
+    if (["input-tag", "custom-tag", "cascader"].includes(item.type!)) {
+      formData[item.prop] = Array.isArray(item.initialValue) ? item.initialValue : [];
+    } else if (item.type === "input-number") {
+      formData[item.prop] = item.initialValue ?? null;
     } else {
-      formData[item.prop] = item.initialValue ?? ''
+      formData[item.prop] = item.initialValue ?? "";
     }
-  })
-})
+  });
+});
 
 // 暴露的属性和方法
 defineExpose({
@@ -293,13 +237,13 @@ defineExpose({
   setFormItemData: (key: string, value: any) => (formData[key] = value),
   // 禁用表单
   handleDisabled: (disable: boolean) => {
-    formDisable.value = disable
+    formDisable.value = disable;
     form.value = {
       ...props.modalConfig.form,
-      disabled: disable,
-    }
-  },
-})
+      disabled: disable
+    };
+  }
+});
 </script>
 
 <style lang="scss" scoped>

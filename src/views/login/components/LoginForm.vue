@@ -10,13 +10,7 @@
       </el-input>
     </el-form-item>
     <el-form-item prop="password">
-      <el-input
-        v-model="loginForm.password"
-        type="password"
-        placeholder="密码：123456"
-        show-password
-        autocomplete="new-password"
-      >
+      <el-input v-model="loginForm.password" type="password" placeholder="密码：123456" show-password autocomplete="new-password">
         <template #prefix>
           <el-icon class="el-input__icon">
             <lock />
@@ -27,114 +21,112 @@
   </el-form>
   <div class="login-btn">
     <el-button :icon="CircleClose" round size="large" @click="resetForm(loginFormRef)"> 重置 </el-button>
-    <el-button :icon="UserFilled" round size="large" type="primary" :loading="loading" @click="login(loginFormRef)">
-      登录
-    </el-button>
+    <el-button :icon="UserFilled" round size="large" type="primary" :loading="loading" @click="login(loginFormRef)"> 登录 </el-button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { encryptPassword, getTimeState, parseRedirect } from '@/utils'
-import { ElNotification } from 'element-plus'
-import { AuthApi, type ReqLoginForm } from '@/api/auth'
-import { useUserStore } from '@/stores/modules/user'
-import { useTabsStore } from '@/stores/modules/tabs'
-import { useKeepAliveStore } from '@/stores/modules/keepAlive'
-import { initDynamicRouter } from '@/routers/modules/dynamicRouter'
-import { CircleClose, UserFilled } from '@element-plus/icons-vue'
-import type { ElForm } from 'element-plus'
-import { useLoadingStore } from '@/stores/modules/loading'
-import { storeToRefs } from 'pinia'
-import { useDictStore } from '@/stores/modules/dict'
+import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { encryptPassword, getTimeState, parseRedirect } from "@/utils";
+import { ElNotification } from "element-plus";
+import { AuthApi, type ReqLoginForm } from "@/api/auth";
+import { useUserStore } from "@/stores/modules/user";
+import { useTabsStore } from "@/stores/modules/tabs";
+import { useKeepAliveStore } from "@/stores/modules/keepAlive";
+import { initDynamicRouter } from "@/routers/modules/dynamicRouter";
+import { CircleClose, UserFilled } from "@element-plus/icons-vue";
+import type { ElForm } from "element-plus";
+import { useLoadingStore } from "@/stores/modules/loading";
+import { storeToRefs } from "pinia";
+import { useDictStore } from "@/stores/modules/dict";
 
 // todo caps lock
 // todo forget password
 // todo remember me
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
-const tabsStore = useTabsStore()
-const keepAliveStore = useKeepAliveStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
+const tabsStore = useTabsStore();
+const keepAliveStore = useKeepAliveStore();
 
-type FormInstance = InstanceType<typeof ElForm>
-const loginFormRef = ref<FormInstance>()
+type FormInstance = InstanceType<typeof ElForm>;
+const loginFormRef = ref<FormInstance>();
 const loginRules = reactive({
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-})
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }]
+});
 
-const { loading } = storeToRefs(useLoadingStore())
+const { loading } = storeToRefs(useLoadingStore());
 const loginForm = reactive<ReqLoginForm>({
-  username: 'admin',
-  password: '123456',
-})
+  username: "admin",
+  password: "123456"
+});
 
 // login
 const login = (formEl: FormInstance | undefined) => {
   if (!formEl) {
-    return
+    return;
   }
   formEl.validate(async valid => {
     if (!valid) {
-      return
+      return;
     }
     try {
       // 1.执行登录接口
-      const hashedPassword = await encryptPassword(loginForm.password)
-      const { access_token } = await AuthApi.login({ ...loginForm, password: hashedPassword })
-      localStorage.setItem('userCode', loginForm.username)
-      userStore.setToken(access_token)
+      const hashedPassword = await encryptPassword(loginForm.password);
+      const { access_token } = await AuthApi.login({ ...loginForm, password: hashedPassword });
+      localStorage.setItem("userCode", loginForm.username);
+      userStore.setToken(access_token);
 
       // 2.添加动态路由
-      await initDynamicRouter()
-      useDictStore().getAllDict()
+      await initDynamicRouter();
+      useDictStore().getAllDict();
 
       // 3.清空 tabs、keepAlive 数据
-      tabsStore.setTabs([])
-      keepAliveStore.setKeepAliveName([])
+      tabsStore.setTabs([]);
+      keepAliveStore.setKeepAliveName([]);
 
       // 4.跳转到 redirect 或首页
-      const { path, queryParams } = parseRedirect(route.query)
-      router.push({ path, query: queryParams })
+      const { path, queryParams } = parseRedirect(route.query);
+      router.push({ path, query: queryParams });
       ElNotification({
         title: getTimeState(),
-        message: '欢迎登录 Geeker-Admin',
-        type: 'success',
-        duration: 3000,
-      })
+        message: "欢迎登录",
+        type: "success",
+        duration: 3000
+      });
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  })
-}
+  });
+};
 
 // resetForm
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) {
-    return
+    return;
   }
-  formEl.resetFields()
-}
+  formEl.resetFields();
+};
 
 onMounted(() => {
   // 监听 enter 事件（调用登录）
   document.onkeydown = (e: KeyboardEvent) => {
-    if (e.code === 'Enter' || e.code === 'enter' || e.code === 'NumpadEnter') {
+    if (e.code === "Enter" || e.code === "enter" || e.code === "NumpadEnter") {
       if (loading.value) {
-        return
+        return;
       }
-      login(loginFormRef.value)
+      login(loginFormRef.value);
     }
-  }
-})
+  };
+});
 
 onBeforeUnmount(() => {
-  document.onkeydown = null
-})
+  document.onkeydown = null;
+});
 </script>
 
 <style scoped lang="scss">
-@use '../index';
+@use "../index";
 </style>

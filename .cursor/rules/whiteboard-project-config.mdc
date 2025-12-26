@@ -1,0 +1,339 @@
+---
+description: 网易云信白板项目配置规范
+globs: ["vite.config.*", "package.json", ".env*", "tsconfig*.json"]
+alwaysApply: true
+---
+
+# 网易云信白板项目配置规范
+
+基于[官方文档v3.9.15](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/index.html)的项目配置最佳实践。
+
+## 环境变量配置
+
+### 必需的环境变量
+
+
+### 环境区分配置
+```bash
+# .env.development
+VITE_APP_DEBUG=true                 # 开发环境启用调试
+VITE_APP_RECORD=true                # 开发环境启用录制
+
+# .env.production  
+VITE_APP_DEBUG=false                # 生产环境关闭调试
+VITE_APP_RECORD=false               # 生产环境关闭录制
+```
+
+## TypeScript 配置
+
+### tsconfig.json 推荐配置
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts", 
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
+```
+
+### 白板相关类型声明
+```typescript
+// src/typings/global.d.ts
+declare global {
+  interface Window {
+    WhiteBoardSDK: typeof import('@/typings/WhiteBoardSDK').default
+    ToolCollection: typeof import('@/typings/ToolCollection').default
+    RecordPlayer: typeof import('@/typings/RecordPlayer').default
+    whiteboardAPI?: any  // 开发调试API
+    whiteboardDebug?: any // 调试工具
+  }
+}
+
+export {}
+```
+
+## Vite 配置优化
+
+### vite.config.ts 推荐设置
+```typescript
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [vue()],
+  
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
+  
+  // 白板SDK优化配置
+  optimizeDeps: {
+    include: [
+      'crypto-js',
+      'crypto-js/sha1'
+    ]
+  },
+  
+  // 构建优化
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 白板SDK相关代码单独打包
+          whiteboard: ['crypto-js'],
+          vendor: ['vue', 'vue-router', 'pinia']
+        }
+      }
+    },
+    // 确保兼容性
+    target: 'es2015'
+  },
+  
+  // 开发服务器配置
+  server: {
+    host: '0.0.0.0',  // 允许外部访问，便于测试
+    port: 5173,
+    cors: true,       // 允许跨域，白板资源可能需要
+    https: false      // 如需HTTPS，白板功能更完整
+  },
+  
+  // 预览服务器配置
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
+    cors: true
+  }
+})
+```
+
+## Package.json 依赖管理
+
+### 核心依赖
+```json
+{
+  "dependencies": {
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1", 
+    "pinia": "^3.0.3",
+    "crypto-js": "^4.2.0",
+    "axios": "^1.12.2"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "typescript": "~5.8.0",
+    "vite": "^7.0.6",
+    "vue-tsc": "^3.0.4"
+  }
+}
+```
+
+### 推荐脚本
+```json
+{
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vue-tsc --build && vite build",
+    "preview": "vite preview --host",
+    "type-check": "vue-tsc --build",
+    "lint": "eslint . --fix",
+    "clean": "rm -rf dist node_modules/.vite"
+  }
+}
+```
+
+## ESLint 配置
+
+### eslint.config.ts
+```typescript
+import js from '@eslint/js'
+import pluginVue from 'eslint-plugin-vue'
+import * as parserVue from 'vue-eslint-parser'
+import configTypescript from '@vue/eslint-config-typescript'
+import configPrettier from '@vue/eslint-config-prettier'
+
+export default [
+  js.configs.recommended,
+  ...pluginVue.configs['flat/essential'],
+  ...configTypescript(),
+  configPrettier,
+  
+  {
+    files: ['**/*.vue', '**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: parserVue,
+      parserOptions: {
+        parser: '@typescript-eslint/parser',
+        sourceType: 'module'
+      }
+    },
+    rules: {
+      // 白板相关规则
+      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      
+      // Vue组件规则
+      'vue/multi-word-component-names': 'off',
+      'vue/no-unused-vars': 'error',
+      
+      // TypeScript规则
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn'
+    }
+  },
+  
+  {
+    // 忽略白板SDK相关文件的检查
+    ignores: [
+      'public/whiteboard/**',
+      'src/typings/**/*.d.ts',
+      'dist/**',
+      'node_modules/**'
+    ]
+  }
+]
+```
+
+## Git 配置
+
+### .gitignore 推荐
+```gitignore
+# 依赖
+node_modules/
+.pnpm-debug.log*
+
+# 构建产物
+dist/
+dist-ssr/
+*.local
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量（生产环境）
+.env.local
+.env.production.local
+.env.*.local
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 白板相关临时文件
+*.wb
+*.yxwb
+whiteboard-temp/
+```
+
+
+## CDN 和资源配置
+
+### 白板SDK资源配置
+```html
+<!-- public/index.html -->
+<head>
+  <!-- 白板SDK核心文件 -->
+  <script src="/whiteboard/WhiteBoardSDK.js"></script>
+  <script src="/whiteboard/ToolCollection.js"></script>
+  
+  <!-- PPT渲染器（动态文档必需） -->
+  <script src="/whiteboard/pptRenderer.js"></script>
+  
+  <!-- 录像回放（可选） -->
+  <script src="/whiteboard/RecordPlayer.js"></script>
+  
+  <!-- 文档转换器（可选） -->
+  <script src="/whiteboard/DocConverter.js"></script>
+</head>
+```
+
+### Vite 资源处理
+```typescript
+// vite.config.ts
+export default defineConfig({
+  // 确保白板资源正确处理
+  assetsInclude: ['**/*.wb', '**/*.yxwb'],
+  
+  publicDir: 'public',
+  
+  build: {
+    rollupOptions: {
+      external: [
+        // 白板SDK作为外部依赖
+        'WhiteBoardSDK',
+        'ToolCollection', 
+        'RecordPlayer',
+        'DocConverter'
+      ]
+    }
+  }
+})
+```
+
+## 性能监控配置
+
+### 开发环境性能监控
+```typescript
+// src/utils/performance.ts
+if (import.meta.env.DEV) {
+  // 白板性能监控
+  const originalJoinRoom = WhiteBoardSDK.prototype.joinRoom
+  
+  WhiteBoardSDK.prototype.joinRoom = function(...args) {
+    const start = performance.now()
+    const result = originalJoinRoom.apply(this, args)
+    
+    if (result instanceof Promise) {
+      result.then(() => {
+        console.log(`🎯 白板初始化耗时: ${performance.now() - start}ms`)
+      })
+    }
+    
+    return result
+  }
+}
+```
+
+遵循这些配置规范可以确保网易云信白板项目的稳定性、性能和可维护性。

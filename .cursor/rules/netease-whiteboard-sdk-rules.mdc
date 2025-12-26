@@ -1,0 +1,756 @@
+---
+description: 网易云信互动白板SDK开发规范与最佳实践
+globs: ["**/*whiteboard*", "**/*board*", "src/views/**/*.vue", "src/typings/**/*.d.ts"]
+alwaysApply: true
+---
+
+# 网易云信互动白板SDK开发规范
+
+基于[官方API文档v3.9.15](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/index.html)的开发规范和最佳实践。
+
+## SDK架构理解
+
+### 四大核心模块
+```typescript
+// 1. WhiteBoardSDK - 主实例，房间管理
+const whiteboardSDK = WhiteBoardSDK.getInstance({...})
+
+// 2. DrawPlugin - 绘制和操作核心  
+whiteboardSDK.joinRoom({...}).then((drawPlugin: DrawPlugin) => {...})
+
+// 3. ToolCollection - 工具栏UI管理
+const toolCollection = ToolCollection.getInstance({...})
+
+// 4. RecordPlayer - 录像回放（可选）
+RecordPlayer.getInstance({...}).then((player) => {...})
+```
+
+### WhiteBoardSDKInstance 核心方法
+基于[官方接口文档](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/interfaces/WhiteBoardSDK.WhiteBoardSDKInstance.html)：
+
+```typescript
+interface WhiteBoardSDKInstance {
+  // 房间操作
+  joinRoom(opt: {
+    channel: string;              // 房间名称
+    persistent?: boolean;         // 是否持久化房间(仅G2支持)
+    channelDestroyTime?: number;  // 房间销毁时间(Unix时间戳)
+  }, callback: IJoinRoomCallback): Promise<DrawPlugin>
+  
+  // 生命周期管理
+  destroy(): void                 // 销毁SDK，断开连接
+  
+  // 状态查询
+  getUid(): number               // 获取当前用户UID
+  getChannelId(): string         // 获取当前频道ID(用于录像)
+  isConnected(): boolean         // 是否已连接
+  isSynchronizing(): boolean     // 是否正在同步
+}
+```
+
+## SDK初始化规范
+
+### ✅ 正确的初始化流程
+```typescript
+// 1. 必须使用shallowRef保存实例
+const whiteboardSDK = shallowRef<WhiteBoardSDKInstance | null>(null)
+const toolCollection = shallowRef<ToolCollectionInstance | null>(null)
+
+// 2. 错误处理和状态监控
+onMounted(async () => {
+  try {
+    whiteboardSDK.value = WhiteBoardSDK.getInstance({
+      appKey: authStore.authParams?.appKey as string,
+      uid: Math.ceil(Math.random() * 10000000),
+      container: document.getElementById('whiteboard'),
+      platform: 'web',
+      record: false, // 生产环境关闭录制
+      debug: false,  // 生产环境关闭调试
+      getAuthInfo
+    })
+    
+    // 3. 状态监控
+    const checkConnection = () => {
+      console.log('SDK连接状态:', whiteboardSDK.value?.isConnected())
+      console.log('SDK同步状态:', whiteboardSDK.value?.isSynchronizing())
+    }
+    setTimeout(checkConnection, 1000)
+    
+  } catch (error) {
+    console.error('白板SDK初始化失败:', error)
+  }
+})
+```
+
+### ❌ 避免的错误做法
+```typescript
+// 错误：直接使用ref而不是shallowRef
+const whiteboardSDK = ref(null) // ❌
+
+// 错误：没有错误处理
+const whiteboardSDK = WhiteBoardSDK.getInstance({...}) // ❌
+
+// 错误：在生产环境开启调试
+debug: true // ❌
+```
+
+## DrawPlugin操作规范
+
+### DrawPlugin 核心接口分类
+基于[官方DrawPlugin接口文档](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/interfaces/DrawPlugin.DrawPlugin-1.html)：
+
+```typescript
+interface DrawPlugin {
+  // === 基本操作 ===
+  enableDraw(enable: boolean): void               // 启用/禁用绘制
+  setAppConfig(config: Partial<IAppConfig>): void // 设置应用配置
+  setShowCursor(show: boolean): void              // 设置鼠标广播
+  setNickName(name: string): void                 // 设置昵称
+
+  // === 画布操作 ===
+  clear(): void                                   // 清空画布
+  undo(): void                                    // 撤销操作
+  redo(): void                                    // 重做操作
+  duplicate(): void                               // 复制选中元素
+  setTool(toolName: string, payload?: IMacroPayload): void // 设置教具
+  setStrokeColor(type: 'link'|'shape'|'pen', color: string): void // 设置颜色
+  setStrokeWidth(type: 'link'|'shape'|'pen', width: number): void // 设置线宽
+
+  // === 文档/Board操作 ===
+  addDoc(opt: {docName: string, params: IStaticDocParam}): string           // 添加静态文档
+  addTransDoc(opt: {docName: string, pageCount: number, width: number, height: number, url: string}): string // 添加动态PPT
+  addBoard(docName: string, pageCount: number): string     // 添加空白Board
+  gotoBoard(boardName: string): void                       // 跳转Board
+  deleteBoard(boardName: string): void                     // 删除Board
+  getBoardInfos(): IBoardInfos                            // 获取Board信息
+  hasTransDoc(): boolean                                   // 是否为动态文档
+  exportBoards(opt: {boardNames: string[], fileName?: string, download?: boolean}): object // 导出白板
+  importBoards(opt: {url: string, boardNames?: string[], overwrite?: boolean}): void       // 导入白板
+
+  // === 页面操作 ===
+  addPage(opt: {insertAfter?: number, payload: any}): void // 添加页面
+  gotoPage(index: number): void                           // 跳转页面
+  gotoFirstPage(): void                                   // 第一页
+  gotoLastPage(): void                                    // 最后一页
+  gotoNextPage(): void                                    // 下一页
+  gotoPrevPage(): void                                    // 上一页
+  deletePage(index: number): void                         // 删除页面
+  getPageInfos(boardName?: string): IPageInfos           // 获取页面信息
+
+  // === 动画操作（PPT）===
+  nextAnim(): void                                        // 下一动画
+  prevAnim(): void                                        // 上一动画
+  gotoAnim(opt: {pageIndex: number, animIndex: number, animState: 'start'|'end'}): void // 跳转动画
+  getAnimInfos(): {pageIndex: number, animIndex: number, animState: string} | null      // 获取动画信息
+  hasBackground(): boolean                                // 是否有背景
+
+  // === 视角操作 ===
+  fitToContent(animate: boolean): void                    // 适配内容
+  fitToDoc(animate: boolean): void                        // 适配文档
+  resetCamera(animate: boolean): void                     // 重置视角
+  setCameraBound(bound: ICameraBound, animate: boolean): void // 设置视角
+  getCameraBound(): {centerX: number, centerY: number, width: number, height: number} // 获取视角
+  zoomIn(): void                                          // 放大
+  zoomOut(): void                                         // 缩小
+  zoomTo(scale: number, animate: boolean): void           // 缩放到指定倍数
+  getZoomFactor(): number                                 // 获取缩放倍数
+
+  // === 视角同步 ===
+  setSelfAsBroadcaster(): void                           // 设为主播
+  unsetSelfAsBroadcaster(): void                         // 停止主播
+  setSelfAsFollower(): void                              // 跟随主播
+  setSelfAsFreeObserver(): void                          // 自由观看
+  getVisionState(): {mode: string, broadcasterName?: string, broadcaster?: string} // 获取视角状态
+
+  // === 媒体操作 ===
+  addImage(opt: {url: string, pageIndex?: number, boardName?: string, antiLeechProp?: IAntiLeechProp}): void // 添加图片
+  addVideo(opt: {url: string, sourceType: string, title?: string, pageIndex?: number, boardName?: string}): void // 添加视频
+  addAudio(opt: {url: string, sourceType: string, title?: string, pageIndex?: number, boardName?: string}): void // 添加音频
+  setPageBackground(opt: {url: string, width: number, height: number, antiLeechProp?: IAntiLeechProp}): void    // 设置背景
+
+  // === 导出功能 ===
+  exportAsImage(opt?: {type?: 'jpeg'|'png', quality?: number, content?: string}): void                    // 导出图片
+  exportAsBase64String(opt?: {type?: 'jpeg'|'png', quality?: number, content?: string}): object          // 导出Base64
+  exportBoardAsStr(opt: object, callbacks: {onComplete: Function, onResourceProgress?: Function}): void   // 导出字符串
+
+  // === 流操作 ===
+  getStream(opt?: {width?: number, keepDPI?: boolean, frameRate?: number}): MediaStream  // 获取视频流
+  updateStream(opt?: {width?: number, keepDPI?: boolean}): MediaStream                   // 更新流参数
+  stopStream(): void                                                                     // 停止流
+
+  // === 状态查询 ===
+  getUndoCount(): number                                 // 可撤销次数
+  getRedoCount(): number                                 // 可重做次数
+  isClearAvailable(): boolean                            // 是否可清空
+  getSelectedIds(): string[]                             // 选中元素ID列表
+  getCurrTool(): string                                  // 当前工具
+  getDefStyles(): IStyle                                 // 默认样式
+  getPageElementInfos(): Array<{id: string, type: string, visible: boolean}> // 页面元素信息
+  getResourceMetadata(opt: {url: string, type: 'image'|'video'|'audio'}): IResourceMetaData // 资源元数据
+  isCameraReady(): boolean                               // 相机是否就绪
+
+  // === 自定义背景 ===
+  setCustomBackground(coordinate: 'world'|'container', customFn: Function, bgName: string): void // 设置自定义背景
+  unsetCustomBackground(): void                          // 取消自定义背景
+  getBgRendererName(): string                            // 获取背景名称
+
+  // === 高级功能 ===
+  lockCameraWithContent(opt: {width: number, height: number}): void           // 锁定相机
+  unlockCameraWithContent(): void                                             // 解锁相机
+  updateContainerAfterResize(): void                                          // 容器尺寸变化后更新
+  rotateElement(opt: {id: string, angle: number}): void                       // 旋转元素
+  setElementsVisibility(opt: {ids?: string[], visible: boolean}): void        // 设置元素可见性
+  setFontFamilies(fontFamilies: Array<IFont>): void                          // 设置字体
+  getFontFamilies(): Array<IFont>                                            // 获取字体
+
+  // === 事件监听 ===
+  on(eventName: string, callback: Function): void        // 注册事件监听
+}
+```
+
+### 文档操作最佳实践
+```typescript
+// ✅ 标准的Board操作流程
+async function handleBoardOperations(drawPlugin: DrawPlugin) {
+  // 1. 获取当前Board信息
+  const boardInfos = drawPlugin.getBoardInfos()
+  console.log('当前Board:', boardInfos.currBoard)
+  console.log('所有Board:', boardInfos.boardNames)
+  
+  // 2. 添加动态文档（PPT）
+  const transDocBoardName = drawPlugin.addTransDoc({
+    docName: 'PPT课件',
+    pageCount: 57,
+    width: 960,
+    height: 540,
+    url: 'https://wb.vod.126.net/.../index.json'
+  })
+  
+  // 3. 添加静态文档（PDF）
+  const staticDocBoardName = drawPlugin.addDoc({
+    docName: 'PDF文档',
+    params: {
+      template: "https://domain.com/{index}.jpg",
+      width: 1920,
+      height: 1080,
+      offset: 1,
+      pageCount: 10
+    }
+  })
+  
+  // 4. Board跳转
+  drawPlugin.gotoBoard(transDocBoardName)
+}
+```
+
+### 页面导航规范
+```typescript
+// ✅ 完整的页面控制功能
+function setupPageNavigation(drawPlugin: DrawPlugin) {
+  // 页面操作
+  const pageOperations = {
+    // 基础导航
+    nextPage: () => drawPlugin.gotoNextPage(),
+    prevPage: () => drawPlugin.gotoPrevPage(),
+    firstPage: () => drawPlugin.gotoFirstPage(),
+    lastPage: () => drawPlugin.gotoLastPage(),
+    gotoPage: (index: number) => drawPlugin.gotoPage(index),
+    
+    // 动画控制（仅PPT）
+    nextAnim: () => drawPlugin.nextAnim(),
+    prevAnim: () => drawPlugin.prevAnim(),
+    gotoAnim: (opt: {pageIndex: number, animIndex: number, animState: 'start'|'end'}) => 
+      drawPlugin.gotoAnim(opt),
+    
+    // 页面管理
+    addPage: (payload?: any) => drawPlugin.addPage({payload}),
+    deletePage: (index: number) => drawPlugin.deletePage(index),
+    
+    // 状态查询
+    getPageInfos: () => drawPlugin.getPageInfos(),
+    getAnimInfos: () => drawPlugin.getAnimInfos(),
+    hasTransDoc: () => drawPlugin.hasTransDoc()
+  }
+  
+  return pageOperations
+}
+```
+
+### 视角和缩放控制
+```typescript
+// ✅ 视角操作规范
+function setupViewportControls(drawPlugin: DrawPlugin) {
+  return {
+    // 适配操作
+    fitToContent: (animate = true) => drawPlugin.fitToContent(animate),
+    fitToDoc: (animate = true) => drawPlugin.fitToDoc(animate),
+    resetCamera: (animate = true) => drawPlugin.resetCamera(animate),
+    
+    // 缩放控制
+    zoomIn: () => drawPlugin.zoomIn(),
+    zoomOut: () => drawPlugin.zoomOut(),
+    zoomTo: (scale: number, animate = true) => drawPlugin.zoomTo(scale, animate),
+    getZoomFactor: () => drawPlugin.getZoomFactor(),
+    
+    // 视角同步
+    setSelfAsBroadcaster: () => drawPlugin.setSelfAsBroadcaster(),
+    unsetSelfAsBroadcaster: () => drawPlugin.unsetSelfAsBroadcaster(),
+    setSelfAsFollower: () => drawPlugin.setSelfAsFollower(),
+    setSelfAsFreeObserver: () => drawPlugin.setSelfAsFreeObserver()
+  }
+}
+```
+
+## ToolCollection工具栏规范
+
+### 工具栏配置最佳实践
+```typescript
+// ✅ 标准工具栏设置
+function setupToolCollection(drawPlugin: DrawPlugin, container: HTMLElement) {
+  const toolCollection = ToolCollection.getInstance({
+    container,
+    handler: drawPlugin,
+    options: {
+      platform: 'web'
+    }
+  })
+  
+  // 显示工具栏
+  toolCollection.show()
+  
+  // 移除不需要的工具
+  toolCollection.removeTool({
+    position: 'left',
+    name: 'uploadCenter'
+  })
+  
+  // 移除子项目
+  toolCollection.removeSubItem({
+    baseTool: 'multiInOne',
+    subItemName: 'preview'
+  })
+  
+  // 设置默认大小
+  toolCollection.setItemDefaultSize(36)
+  
+  // 事件监听
+  toolCollection.on('docAdd', (docList, allDocs) => {
+    console.log('文档添加事件:', docList, allDocs)
+  })
+  
+  return toolCollection
+}
+```
+
+### 动态工具栏控制
+```typescript
+// ✅ 基于文档类型的动态工具栏
+function setupDynamicToolbar(drawPlugin: DrawPlugin, toolCollection: ToolCollectionInstance) {
+  let hasTransDoc = false
+  
+  drawPlugin.on('event:appState:change', (stateName: string) => {
+    if (stateName === 'board') {
+      if (!hasTransDoc && drawPlugin.hasTransDoc()) {
+        // 切换到动态文档（PPT）- 显示动画控制
+        hasTransDoc = true
+        toolCollection.addOrSetContainer({
+          position: 'bottomRight',
+          items: [
+            { tool: 'prevPage', hint: '上一页' },
+            { tool: 'prevAnim', hint: '上一动画' },
+            { tool: 'pageInfo' },
+            { tool: 'nextAnim', hint: '下一动画' },
+            { tool: 'nextPage', hint: '下一页' },
+            { tool: 'preview', hint: '预览', previewSliderPosition: 'right' }
+          ]
+        })
+      } else if (hasTransDoc && !drawPlugin.hasTransDoc()) {
+        // 切换到静态文档 - 显示页面控制
+        hasTransDoc = false
+        toolCollection.addOrSetContainer({
+          position: 'bottomRight',
+          items: [
+            { tool: 'firstPage', hint: '第一页' },
+            { tool: 'prevPage', hint: '上一页' },
+            { tool: 'pageInfo' },
+            { tool: 'nextPage', hint: '下一页' },
+            { tool: 'lastPage', hint: '最后一页' },
+            { tool: 'preview', hint: '预览', previewSliderPosition: 'right' }
+          ]
+        })
+      }
+    }
+  })
+}
+```
+
+## 事件处理规范
+
+### 状态变化监听
+```typescript
+// ✅ 完整的事件监听设置
+function setupEventListeners(drawPlugin: DrawPlugin) {
+  // Board变化监听
+  drawPlugin.on('event:appState:change', (stateName, value) => {
+    switch (stateName) {
+      case 'board':
+        console.log('Board切换:', value)
+        break
+      case 'page':
+        console.log('页面切换:', value)
+        break
+      case 'zoomFactor':
+        console.log('缩放变化:', value)
+        break
+      case 'currTool':
+        console.log('工具切换:', value)
+        break
+      case 'vision':
+        console.log('视角变化:', value)
+        break
+      case 'selectChange':
+        console.log('选择变化:', value)
+        break
+    }
+  })
+  
+  // 资源加载监听
+  drawPlugin.on('event:resource:onload', (resource) => {
+    console.log(`${resource.type}: ${resource.url} 加载${resource.loaded ? '成功' : '失败'}`)
+  })
+  
+  // 导入白板事件
+  drawPlugin.on('event:importBoard', (action) => {
+    if (action === 'start') {
+      console.log('开始导入白板')
+    } else if (action === 'finish') {
+      console.log('白板导入完成')
+    }
+  })
+}
+```
+
+## 房间生命周期管理
+
+### IJoinRoomCallback 回调规范
+基于[官方文档](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/interfaces/WhiteBoardSDK.WhiteBoardSDKInstance.html#joinRoom)：
+
+```typescript
+// ✅ 完整的房间回调处理
+interface IJoinRoomCallback {
+  ondisconnected?: (error?: any) => void    // 断开连接回调
+  onwillreconnect?: () => void             // 即将重连回调
+  onconnected?: () => void                 // 连接成功回调
+  onSyncStart?: () => void                 // 开始同步回调
+  onSyncFinish?: () => void                // 同步完成回调
+}
+
+function setupRoomCallbacks(): IJoinRoomCallback {
+  return {
+    ondisconnected: (error) => {
+      console.error('🔴 房间连接断开:', error)
+      // 显示用户友好的断线提示
+      WhiteBoardSDK.showToast({
+        type: 'error',
+        msg: '网络连接中断，正在尝试重连...',
+        time: 5000
+      })
+      
+      // 可以在这里处理重连逻辑或用户引导
+      handleDisconnection(error)
+    },
+    
+    onwillreconnect: () => {
+      console.log('🟡 准备重连房间...')
+      WhiteBoardSDK.showToast({
+        type: 'info',
+        msg: '正在重新连接...',
+        time: 3000
+      })
+    },
+    
+    onconnected: () => {
+      console.log('🟢 房间连接成功!')
+      WhiteBoardSDK.hideToast()
+      // 连接成功后的初始化操作
+      onRoomConnected()
+    },
+    
+    onSyncStart: () => {
+      console.log('🔄 开始同步白板数据...')
+      // 可以显示同步进度指示器
+      showSyncProgress(true)
+    },
+    
+    onSyncFinish: () => {
+      console.log('✅ 白板数据同步完成!')
+      // 隐藏同步进度指示器
+      showSyncProgress(false)
+    }
+  }
+}
+
+// 辅助函数
+function handleDisconnection(error: any) {
+  // 记录断线原因
+  console.error('断线详细信息:', {
+    error,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent
+  })
+  
+  // 根据错误类型进行不同处理
+  if (error?.code === 'NETWORK_ERROR') {
+    // 网络问题
+  } else if (error?.code === 'AUTH_FAILED') {
+    // 认证失败，可能需要重新获取token
+  }
+}
+
+function onRoomConnected() {
+  // 房间连接成功后的操作
+  console.log('房间连接成功，开始初始化白板功能...')
+}
+
+function showSyncProgress(show: boolean) {
+  // 显示/隐藏同步进度UI
+  if (show) {
+    console.log('显示同步进度指示器')
+  } else {
+    console.log('隐藏同步进度指示器')
+  }
+}
+```
+
+### 房间状态监控
+```typescript
+// ✅ 实时状态监控
+function setupConnectionMonitor(whiteboardSDK: WhiteBoardSDKInstance) {
+  const monitorInterval = setInterval(() => {
+    const status = {
+      isConnected: whiteboardSDK.isConnected(),
+      isSynchronizing: whiteboardSDK.isSynchronizing(),
+      uid: whiteboardSDK.getUid(),
+      channelId: whiteboardSDK.getChannelId(),
+      timestamp: new Date().toISOString()
+    }
+    
+    console.log('📊 房间状态:', status)
+    
+    // 检查异常状态
+    if (!status.isConnected && !status.isSynchronizing) {
+      console.warn('⚠️  房间连接异常，可能需要重连')
+    }
+    
+    if (status.isSynchronizing) {
+      console.info('🔄 正在同步数据，请稍候...')
+    }
+    
+  }, 10000) // 每10秒检查一次
+  
+  // 清理函数
+  return () => clearInterval(monitorInterval)
+}
+
+// 使用示例
+onMounted(() => {
+  const cleanupMonitor = setupConnectionMonitor(whiteboardSDK.value!)
+  
+  onUnmounted(() => {
+    cleanupMonitor()
+  })
+})
+```
+
+## 错误处理和调试
+
+### 统一错误处理模式
+```typescript
+// ✅ 标准错误处理
+async function safeApiCall<T>(
+  apiCall: () => T,
+  errorContext: string
+): Promise<T | null> {
+  try {
+    return apiCall()
+  } catch (error) {
+    console.error(`${errorContext}失败:`, error)
+    // Toast提示用户
+    WhiteBoardSDK.showToast({
+      type: 'error',
+      msg: `${errorContext}失败，请稍后重试`,
+      time: 3000
+    })
+    return null
+  }
+}
+
+// 使用示例
+const boardInfos = await safeApiCall(
+  () => drawPlugin.getBoardInfos(),
+  '获取Board信息'
+)
+```
+
+### 调试工具设置
+```typescript
+// ✅ 开发环境调试工具
+if (import.meta.env.DEV) {
+  // 全局调试API
+  (window as any).whiteboardDebug = {
+    // SDK状态
+    getSDKStatus: () => ({
+      uid: whiteboardSDK.value?.getUid(),
+      channelId: whiteboardSDK.value?.getChannelId(),
+      isConnected: whiteboardSDK.value?.isConnected(),
+      isSynchronizing: whiteboardSDK.value?.isSynchronizing()
+    }),
+    
+    // 绘制状态
+    getDrawStatus: () => ({
+      undoCount: drawPlugin.getUndoCount(),
+      redoCount: drawPlugin.getRedoCount(),
+      zoomFactor: drawPlugin.getZoomFactor(),
+      currTool: drawPlugin.getCurrTool(),
+      selectedIds: drawPlugin.getSelectedIds(),
+      isClearAvailable: drawPlugin.isClearAvailable()
+    }),
+    
+    // Board信息
+    getBoardStatus: () => drawPlugin.getBoardInfos(),
+    getPageStatus: () => drawPlugin.getPageInfos(),
+    getAnimStatus: () => drawPlugin.getAnimInfos()
+  }
+}
+```
+
+## 性能优化规则
+
+### 内存管理
+```typescript
+// ✅ 正确的生命周期管理
+onUnmounted(() => {
+  // 清理资源
+  if (whiteboardSDK.value) {
+    whiteboardSDK.value.destroy()
+  }
+  
+  if (toolCollection.value) {
+    toolCollection.value.hide()
+  }
+  
+  // 停止视频流
+  drawPlugin?.stopStream()
+})
+```
+
+### 防抖和节流
+```typescript
+// ✅ 高频操作优化
+import { debounce, throttle } from 'lodash-es'
+
+const debouncedZoom = debounce((scale: number) => {
+  drawPlugin.zoomTo(scale, true)
+}, 300)
+
+const throttledPan = throttle((x: number, y: number) => {
+  drawPlugin.setCameraBound({
+    centerX: x,
+    centerY: y,
+    width: 1920,
+    height: 1080
+  }, false)
+}, 100)
+```
+
+## 类型安全规则
+
+### 严格类型定义
+```typescript
+// ✅ 使用官方类型定义
+import type { 
+  DrawPlugin, 
+  WhiteBoardSDKInstance,
+  ToolCollectionInstance,
+  IBoardInfos,
+  IPageInfos,
+  IAppConfig 
+} from '@/typings/'
+
+// ✅ 扩展类型定义
+interface WhiteboardState {
+  sdk: WhiteBoardSDKInstance | null
+  drawPlugin: DrawPlugin | null
+  toolCollection: ToolCollectionInstance | null
+  isReady: boolean
+  error: string | null
+}
+```
+
+## 安全规范
+
+### 认证和权限
+```typescript
+// ✅ 安全的认证实现
+function getAuthInfo(): Promise<{
+  nonce: string
+  channelDestroyTime: number
+  checksum: string
+  curTime: number
+}> {
+  const nonce = Math.random().toString(36).substring(2, 36)
+  const curTime = Math.round(Date.now() / 1000)
+  
+  // 使用环境变量中的密钥
+  const checksum = SHA1(
+    import.meta.env.VITE_APP_SECRET + nonce + curTime
+  ).toString()
+  
+  return Promise.resolve({
+    nonce,
+    channelDestroyTime: 0,
+    checksum,
+    curTime
+  })
+}
+```
+
+## 测试规范
+
+### 单元测试
+```typescript
+// ✅ 白板功能测试
+describe('WhiteBoard Operations', () => {
+  test('should initialize SDK correctly', async () => {
+    const sdk = WhiteBoardSDK.getInstance({...})
+    expect(sdk).toBeDefined()
+    expect(sdk.getUid()).toBeTruthy()
+  })
+  
+  test('should handle board navigation', () => {
+    const boardInfos = drawPlugin.getBoardInfos()
+    expect(boardInfos.boardNames).toBeInstanceOf(Array)
+    expect(boardInfos.currBoard).toBeTruthy()
+  })
+})
+```
+
+## 文档规范
+
+### API使用文档
+```typescript
+/**
+ * 跳转到指定Board
+ * @param boardName - Board内部名称（由addDoc/addTransDoc/addBoard返回）
+ * @example
+ * ```typescript
+ * const boardName = drawPlugin.addBoard('新白板', 1)
+ * drawPlugin.gotoBoard(boardName)
+ * ```
+ */
+function gotoBoard(boardName: string): void {
+  drawPlugin.gotoBoard(boardName)
+}
+```
+
+遵循这些规范可以确保网易云信白板SDK的正确使用和最佳性能表现。

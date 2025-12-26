@@ -7,9 +7,9 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'Loading' })
+defineOptions({ name: "Loading" });
 </script>
 
 <style scoped lang="scss">
-@use './index';
+@use "./index";
 </style>

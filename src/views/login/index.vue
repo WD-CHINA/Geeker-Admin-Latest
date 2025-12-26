@@ -8,7 +8,7 @@
       <div class="login-form">
         <div class="login-logo">
           <img class="login-icon" src="@/assets/images/logo.svg" alt="" />
-          <h2 class="logo-text">Geeker-Admin</h2>
+          <h2 class="logo-text">isport-resource-platform</h2>
         </div>
         <login-form />
       </div>
@@ -17,11 +17,11 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'Login' })
-import LoginForm from './components/LoginForm.vue'
-import SwitchDark from '@/components/SwitchDark/index.vue'
+defineOptions({ name: "Login" });
+import LoginForm from "./components/LoginForm.vue";
+import SwitchDark from "@/components/SwitchDark/index.vue";
 </script>
 
 <style scoped lang="scss">
-@use './index';
+@use "./index";
 </style>

@@ -1,14 +1,6 @@
 <template>
   <div class="icon-box">
-    <el-input
-      ref="inputRef"
-      v-model="valueIcon"
-      v-bind="$attrs"
-      :placeholder="placeholder"
-      :clearable="clearable"
-      @clear="clearIcon"
-      @click="openDialog"
-    >
+    <el-input ref="inputRef" v-model="valueIcon" v-bind="$attrs" :placeholder="placeholder" :clearable="clearable" @clear="clearIcon" @click="openDialog">
       <template #append>
         <template v-if="valueIcon.startsWith('i-')">
           <!-- <el-divider content-position="center"> 本地图标 </el-divider> -->
@@ -43,80 +35,80 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'SelectIcon' })
-import { ref, computed } from 'vue'
-import * as Icons from '@element-plus/icons-vue'
+defineOptions({ name: "SelectIcon" });
+import { ref, computed } from "vue";
+import * as Icons from "@element-plus/icons-vue";
 
-const allIcons = ref<{ label: string; value: string }[]>([])
+const allIcons = ref<{ label: string; value: string }[]>([]);
 
 const processIcons = () => {
   // 本地图标
-  const localIconFiles = import.meta.glob('@/assets/icons/svg/*.svg', { eager: true })
+  const localIconFiles = import.meta.glob("@/assets/icons/svg/*.svg", { eager: true });
   for (const key in localIconFiles) {
-    const name = key.split('/').pop()?.replace('.svg', '')
+    const name = key.split("/").pop()?.replace(".svg", "");
     if (name) {
       // 前缀 i- 是 unocss.config.ts 中 presetIcons 的 prefix 配置，localSvgIcon 是 customCollections 的 key
-      allIcons.value.push({ label: `i-localSvgIcon:${name}`, value: `i-localSvgIcon:${name}` })
+      allIcons.value.push({ label: `i-localSvgIcon:${name}`, value: `i-localSvgIcon:${name}` });
     }
   }
   // Element Plus 图标
   for (const key in Icons) {
-    allIcons.value.push({ label: `el-${key.toLocaleLowerCase()}`, value: key })
+    allIcons.value.push({ label: `el-${key.toLocaleLowerCase()}`, value: key });
   }
-}
+};
 
-processIcons()
+processIcons();
 
 interface SelectIconProps {
-  iconValue?: string
-  title?: string
-  clearable?: boolean
-  placeholder?: string
+  iconValue?: string;
+  title?: string;
+  clearable?: boolean;
+  placeholder?: string;
 }
 
 const props = withDefaults(defineProps<SelectIconProps>(), {
-  iconValue: '',
-  title: '请选择图标',
+  iconValue: "",
+  title: "请选择图标",
   clearable: true,
-  placeholder: '请选择图标',
-})
+  placeholder: "请选择图标"
+});
 
 // 重新接收一下，防止打包后 clearable 报错
-const valueIcon = ref(props.iconValue)
+const valueIcon = ref(props.iconValue);
 
 // open Dialog
-const dialogVisible = ref(false)
-const openDialog = () => (dialogVisible.value = true)
+const dialogVisible = ref(false);
+const openDialog = () => (dialogVisible.value = true);
 
 // 选择图标(触发更新父组件数据)
 const emit = defineEmits<{
-  'update:iconValue': [value: string]
-}>()
+  "update:iconValue": [value: string];
+}>();
 const selectIcon = (item: any) => {
-  dialogVisible.value = false
-  valueIcon.value = item.value
-  emit('update:iconValue', item.value)
-  setTimeout(() => inputRef.value.blur(), 0)
-}
+  dialogVisible.value = false;
+  valueIcon.value = item.value;
+  emit("update:iconValue", item.value);
+  setTimeout(() => inputRef.value.blur(), 0);
+};
 
 // 清空图标
-const inputRef = ref()
+const inputRef = ref();
 const clearIcon = () => {
-  valueIcon.value = ''
-  emit('update:iconValue', '')
-  setTimeout(() => inputRef.value.blur(), 0)
-}
+  valueIcon.value = "";
+  emit("update:iconValue", "");
+  setTimeout(() => inputRef.value.blur(), 0);
+};
 
 // 监听搜索框值
-const inputValue = ref('')
+const inputValue = ref("");
 const iconsList = computed(() => {
   if (!inputValue.value) {
-    return allIcons.value
+    return allIcons.value;
   }
-  return allIcons.value.filter(item => item.label.toLowerCase().includes(inputValue.value.toLowerCase()))
-})
+  return allIcons.value.filter(item => item.label.toLowerCase().includes(inputValue.value.toLowerCase()));
+});
 </script>
 
 <style scoped lang="scss">
-@use './index';
+@use "./index";
 </style>

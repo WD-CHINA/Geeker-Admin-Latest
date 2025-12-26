@@ -1,0 +1,449 @@
+---
+description: 网易云信白板SDK事件监听完整指南
+globs: ["**/*whiteboard*", "**/*board*", "src/views/**/*.vue"]
+alwaysApply: true
+---
+
+# 网易云信白板SDK事件监听完整指南
+
+基于[官方DrawPlugin接口文档](https://doc.yunxin.163.com/whiteboard/api-refer/web/typedoc/Latest/zh/html/interfaces/DrawPlugin.DrawPlugin-1.html)的事件处理最佳实践。
+
+## DrawPlugin 事件监听规范
+
+### 应用状态变化事件
+```typescript
+// ✅ 完整的状态变化监听
+drawPlugin.on('event:appState:change', (stateName: string, value?: any) => {
+  switch (stateName) {
+    case 'board':
+      // Board切换事件，value为IBoardInfos
+      console.log('Board切换到:', value.currBoard)
+      console.log('Board显示名:', value.currBoardDisplayName)
+      handleBoardChange(value)
+      break
+      
+    case 'page':
+      // 页面切换事件，value为IPageInfos
+      console.log('页面切换到:', value.activeIndex)
+      console.log('页面数据:', value.pagePayloads)
+      handlePageChange(value)
+      break
+      
+    case 'zoomFactor':
+      // 缩放变化事件，value为number
+      console.log('缩放倍数变为:', value)
+      handleZoomChange(value)
+      break
+      
+    case 'currTool':
+      // 工具切换事件，value为string
+      console.log('工具切换到:', value)
+      handleToolChange(value)
+      break
+      
+    case 'vision':
+      // 视角变化事件，value为视角状态对象
+      console.log('视角模式:', value.mode)
+      console.log('主播:', value.broadcasterName)
+      handleVisionChange(value)
+      break
+      
+    case 'selectChange':
+      // 选择变化事件，包含三个参数
+      console.log('选择变化:', {
+        oldSelected: arguments[1],      // 之前选中的元素ID数组
+        newSelected: arguments[2],      // 当前选中的元素ID数组
+        nonMedia: arguments[3]          // 非音视频元素ID数组
+      })
+      handleSelectionChange(arguments[1], arguments[2], arguments[3])
+      break
+      
+    case 'styleUpdate':
+      // 样式更新事件，value为IStyle
+      console.log('样式更新:', value)
+      handleStyleUpdate(value)
+      break
+      
+    case 'clearAvailable':
+      // 清空可用性变化事件，value为boolean
+      console.log('清空可用性:', value)
+      handleClearAvailabilityChange(value)
+      break
+      
+    case 'undoCount':
+      // 撤销次数变化事件，value为number
+      console.log('可撤销次数:', value)
+      handleUndoCountChange(value)
+      break
+      
+    case 'redoCount':
+      // 重做次数变化事件，value为number
+      console.log('可重做次数:', value)
+      handleRedoCountChange(value)
+      break
+      
+    case 'cameraReady':
+      // 相机就绪事件
+      console.log('相机已就绪')
+      handleCameraReady()
+      break
+      
+    default:
+      console.log('未处理的状态变化:', stateName, value)
+  }
+})
+
+// 事件处理函数
+function handleBoardChange(boardInfos: IBoardInfos) {
+  // 处理Board切换逻辑
+  updateBoardNavigation(boardInfos)
+  updateToolbarForBoard(boardInfos)
+}
+
+function handlePageChange(pageInfos: IPageInfos) {
+  // 处理页面切换逻辑
+  updatePageNavigation(pageInfos)
+}
+
+function handleZoomChange(zoomFactor: number) {
+  // 处理缩放变化逻辑
+  updateZoomUI(zoomFactor)
+}
+
+function handleToolChange(toolName: string) {
+  // 处理工具切换逻辑
+  updateToolUI(toolName)
+}
+
+function handleVisionChange(visionState: any) {
+  // 处理视角变化逻辑
+  updateVisionUI(visionState)
+}
+
+function handleSelectionChange(oldIds: string[], newIds: string[], nonMediaIds: string[]) {
+  // 处理选择变化逻辑
+  updateSelectionUI(oldIds, newIds, nonMediaIds)
+}
+
+function handleStyleUpdate(style: IStyle) {
+  // 处理样式更新逻辑
+  updateStyleUI(style)
+}
+
+function handleClearAvailabilityChange(available: boolean) {
+  // 处理清空可用性变化逻辑
+  updateClearButton(available)
+}
+
+function handleUndoCountChange(count: number) {
+  // 处理撤销次数变化逻辑
+  updateUndoButton(count > 0)
+}
+
+function handleRedoCountChange(count: number) {
+  // 处理重做次数变化逻辑
+  updateRedoButton(count > 0)
+}
+
+function handleCameraReady() {
+  // 相机就绪后的初始化操作
+  console.log('相机就绪，可以设置背景图片等操作')
+  const cameraBound = drawPlugin.getCameraBound()
+  drawPlugin.setPageBackground({
+    url: 'background-image-url',
+    width: cameraBound.width,
+    height: cameraBound.height
+  })
+}
+```
+
+### 资源加载事件
+```typescript
+// ✅ 资源加载监听
+drawPlugin.on('event:resource:onload', (resource: IResourceMetaData) => {
+  console.log(`资源加载结果:`, {
+    type: resource.type,        // 'image' | 'video' | 'audio'
+    url: resource.url,          // 资源URL
+    loaded: resource.loaded,    // 是否加载成功
+    error: resource.error       // 错误信息(如果有)
+  })
+  
+  if (resource.loaded) {
+    console.log(`✅ ${resource.type} 加载成功: ${resource.url}`)
+    handleResourceLoadSuccess(resource)
+  } else {
+    console.error(`❌ ${resource.type} 加载失败: ${resource.url}`, resource.error)
+    handleResourceLoadError(resource)
+  }
+})
+
+function handleResourceLoadSuccess(resource: IResourceMetaData) {
+  // 资源加载成功处理
+  switch (resource.type) {
+    case 'image':
+      // 图片加载成功
+      break
+    case 'video':
+      // 视频加载成功
+      break
+    case 'audio':
+      // 音频加载成功
+      break
+  }
+}
+
+function handleResourceLoadError(resource: IResourceMetaData) {
+  // 资源加载失败处理
+  WhiteBoardSDK.showToast({
+    type: 'error',
+    msg: `${resource.type}资源加载失败`,
+    time: 3000
+  })
+}
+```
+
+### 白板导入事件
+```typescript
+// ✅ 白板导入进度监听
+drawPlugin.on('event:importBoard', (action: 'start' | 'finish') => {
+  if (action === 'start') {
+    console.log('🔄 开始导入白板内容...')
+    // 显示导入进度UI
+    showImportProgress(true)
+    
+    // 禁用用户操作
+    drawPlugin.enableDraw(false)
+    
+    // 显示加载提示
+    WhiteBoardSDK.showToast({
+      type: 'info',
+      msg: '正在导入白板内容，请稍候...',
+      time: 10000
+    })
+    
+  } else if (action === 'finish') {
+    console.log('✅ 白板内容导入完成!')
+    // 隐藏导入进度UI
+    showImportProgress(false)
+    
+    // 重新启用用户操作
+    drawPlugin.enableDraw(true)
+    
+    // 隐藏加载提示
+    WhiteBoardSDK.hideToast()
+    
+    // 显示完成提示
+    WhiteBoardSDK.showToast({
+      type: 'success',
+      msg: '白板内容导入完成!',
+      time: 3000
+    })
+  }
+})
+
+function showImportProgress(show: boolean) {
+  // 显示/隐藏导入进度UI
+  const progressElement = document.getElementById('import-progress')
+  if (progressElement) {
+    progressElement.style.display = show ? 'block' : 'none'
+  }
+}
+```
+
+## ToolCollection 事件监听
+
+### 文档添加事件
+```typescript
+// ✅ 工具栏文档事件监听
+toolCollection.on('docAdd', (docList: any[], allDocs: any[]) => {
+  console.log('📄 文档添加事件:', {
+    newDocs: docList,        // 新添加的文档列表
+    allDocs: allDocs         // 所有文档列表
+  })
+  
+  // 处理文档添加逻辑
+  handleDocumentAdd(docList, allDocs)
+})
+
+function handleDocumentAdd(docList: any[], allDocs: any[]) {
+  // 更新文档列表UI
+  updateDocumentList(allDocs)
+  
+  // 如果添加了动态文档，更新工具栏
+  const hasTransDoc = docList.some(doc => doc.type === 'transDoc')
+  if (hasTransDoc) {
+    updateToolbarForTransDoc()
+  }
+}
+```
+
+## 事件监听最佳实践
+
+### 统一事件管理器
+```typescript
+// ✅ 事件管理器类
+class WhiteboardEventManager {
+  private drawPlugin: DrawPlugin
+  private toolCollection: ToolCollectionInstance
+  private eventListeners: Map<string, Function[]> = new Map()
+  
+  constructor(drawPlugin: DrawPlugin, toolCollection: ToolCollectionInstance) {
+    this.drawPlugin = drawPlugin
+    this.toolCollection = toolCollection
+    this.setupAllListeners()
+  }
+  
+  private setupAllListeners() {
+    this.setupAppStateListeners()
+    this.setupResourceListeners()
+    this.setupImportListeners()
+    this.setupToolCollectionListeners()
+  }
+  
+  private setupAppStateListeners() {
+    this.drawPlugin.on('event:appState:change', (stateName: string, ...args: any[]) => {
+      // 分发到具体的处理器
+      this.emit(`appState:${stateName}`, ...args)
+    })
+  }
+  
+  private setupResourceListeners() {
+    this.drawPlugin.on('event:resource:onload', (resource: IResourceMetaData) => {
+      this.emit('resource:loaded', resource)
+    })
+  }
+  
+  private setupImportListeners() {
+    this.drawPlugin.on('event:importBoard', (action: string) => {
+      this.emit('board:import', action)
+    })
+  }
+  
+  private setupToolCollectionListeners() {
+    this.toolCollection.on('docAdd', (docList: any[], allDocs: any[]) => {
+      this.emit('doc:added', docList, allDocs)
+    })
+  }
+  
+  // 注册事件监听
+  on(eventName: string, callback: Function) {
+    if (!this.eventListeners.has(eventName)) {
+      this.eventListeners.set(eventName, [])
+    }
+    this.eventListeners.get(eventName)!.push(callback)
+  }
+  
+  // 移除事件监听
+  off(eventName: string, callback?: Function) {
+    if (callback) {
+      const listeners = this.eventListeners.get(eventName) || []
+      const index = listeners.indexOf(callback)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    } else {
+      this.eventListeners.delete(eventName)
+    }
+  }
+  
+  // 触发事件
+  private emit(eventName: string, ...args: any[]) {
+    const listeners = this.eventListeners.get(eventName) || []
+    listeners.forEach(callback => {
+      try {
+        callback(...args)
+      } catch (error) {
+        console.error(`事件处理错误 [${eventName}]:`, error)
+      }
+    })
+  }
+  
+  // 销毁管理器
+  destroy() {
+    this.eventListeners.clear()
+  }
+}
+
+// 使用示例
+const eventManager = new WhiteboardEventManager(drawPlugin, toolCollection)
+
+// 监听Board变化
+eventManager.on('appState:board', (boardInfos: IBoardInfos) => {
+  console.log('Board changed:', boardInfos)
+})
+
+// 监听页面变化
+eventManager.on('appState:page', (pageInfos: IPageInfos) => {
+  console.log('Page changed:', pageInfos)
+})
+
+// 监听资源加载
+eventManager.on('resource:loaded', (resource: IResourceMetaData) => {
+  console.log('Resource loaded:', resource)
+})
+
+// 组件销毁时清理
+onUnmounted(() => {
+  eventManager.destroy()
+})
+```
+
+### 事件防抖处理
+```typescript
+// ✅ 高频事件防抖
+import { debounce } from 'lodash-es'
+
+// 缩放事件防抖
+const debouncedZoomHandler = debounce((zoomFactor: number) => {
+  console.log('缩放稳定在:', zoomFactor)
+  updateZoomUI(zoomFactor)
+}, 300)
+
+drawPlugin.on('event:appState:change', (stateName: string, value: any) => {
+  if (stateName === 'zoomFactor') {
+    debouncedZoomHandler(value)
+  }
+})
+
+// 选择变化事件防抖
+const debouncedSelectionHandler = debounce((oldIds: string[], newIds: string[], nonMediaIds: string[]) => {
+  console.log('选择稳定:', { oldIds, newIds, nonMediaIds })
+  updateSelectionUI(oldIds, newIds, nonMediaIds)
+}, 100)
+
+drawPlugin.on('event:appState:change', (stateName: string) => {
+  if (stateName === 'selectChange') {
+    debouncedSelectionHandler(arguments[1], arguments[2], arguments[3])
+  }
+})
+```
+
+### 错误处理
+```typescript
+// ✅ 事件监听错误处理
+function safeEventListener(eventName: string, handler: Function) {
+  return (...args: any[]) => {
+    try {
+      handler(...args)
+    } catch (error) {
+      console.error(`事件监听错误 [${eventName}]:`, error)
+      
+      // 上报错误
+      reportError({
+        type: 'event_listener_error',
+        eventName,
+        error: error.message,
+        args
+      })
+    }
+  }
+}
+
+// 使用安全的事件监听
+drawPlugin.on('event:appState:change', safeEventListener('appState:change', (stateName, value) => {
+  // 事件处理逻辑
+  handleAppStateChange(stateName, value)
+}))
+```
+
+遵循这些事件监听规范可以确保白板应用的状态同步和用户交互体验。

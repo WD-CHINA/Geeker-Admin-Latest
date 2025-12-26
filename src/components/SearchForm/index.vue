@@ -19,13 +19,13 @@
         <grid-item suffix>
           <div class="operation">
             <el-button type="primary" :icon="Search" :loading="loadingStore.loading" @click="search">
-              {{ $t('common.search') }}
+              {{ $t("common.search") }}
             </el-button>
             <el-button :icon="Delete" :loading="loadingStore.loading" @click="reset">
-              {{ $t('common.reset') }}
+              {{ $t("common.reset") }}
             </el-button>
             <el-button v-if="showCollapse" type="primary" link class="search-isOpen" @click="collapsed = !collapsed">
-              {{ collapsed ? $t('common.expand') : $t('common.collapse') }}
+              {{ collapsed ? $t("common.expand") : $t("common.collapse") }}
               <el-icon class="el-icon--right">
                 <component :is="collapsed ? ArrowDown : ArrowUp" />
               </el-icon>
@@ -37,31 +37,31 @@
   </div>
 </template>
 <script setup lang="ts">
-defineOptions({ name: 'SearchForm' })
-import type { ColumnProps } from '@/components/ProTable/interface'
-import type { BreakPoint } from '@/components/Grid/interface'
-import { Delete, Search, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
-import SearchFormItem from './components/SearchFormItem.vue'
-import Grid from '@/components/Grid/index.vue'
-import GridItem from '@/components/Grid/components/GridItem.vue'
-import MaterialSymbolsHelpOutline from '~icons/material-symbols/help-outline?width=20px&height=20px'
-import { useLoadingStore } from '@/stores/modules/loading'
+defineOptions({ name: "SearchForm" });
+import type { ColumnProps } from "@/components/ProTable/interface";
+import type { BreakPoint } from "@/components/Grid/interface";
+import { Delete, Search, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
+import SearchFormItem from "./components/SearchFormItem.vue";
+import Grid from "@/components/Grid/index.vue";
+import GridItem from "@/components/Grid/components/GridItem.vue";
+import MaterialSymbolsHelpOutline from "~icons/material-symbols/help-outline?width=20px&height=20px";
+import { useLoadingStore } from "@/stores/modules/loading";
 
-const loadingStore = useLoadingStore()
+const loadingStore = useLoadingStore();
 
 interface ProTableProps {
-  columns?: ColumnProps[] // 搜索配置列
-  searchParam?: IObject // 搜索参数
-  searchCol: number | Record<BreakPoint, number>
-  search: (_params: IObject) => void // 搜索方法
-  reset: (_params: IObject) => void // 重置方法
+  columns?: ColumnProps[]; // 搜索配置列
+  searchParam?: IObject; // 搜索参数
+  searchCol: number | Record<BreakPoint, number>;
+  search: (_params: IObject) => void; // 搜索方法
+  reset: (_params: IObject) => void; // 重置方法
 }
 
 // 默认值
 const props = withDefaults(defineProps<ProTableProps>(), {
   columns: () => [],
-  searchParam: () => ({}),
-})
+  searchParam: () => ({})
+});
 
 // 获取响应式设置
 const getResponsive = (item: ColumnProps) => {
@@ -72,35 +72,33 @@ const getResponsive = (item: ColumnProps) => {
     sm: item.search?.sm,
     md: item.search?.md,
     lg: item.search?.lg,
-    xl: item.search?.xl,
-  }
-}
+    xl: item.search?.xl
+  };
+};
 
 // 是否默认折叠搜索项
-const collapsed = ref(true)
+const collapsed = ref(true);
 
 // 获取响应式断点
-const gridRef = ref()
-const breakPoint = computed<BreakPoint>(() => gridRef.value?.breakPoint)
+const gridRef = ref();
+const breakPoint = computed<BreakPoint>(() => gridRef.value?.breakPoint);
 
 // 判断是否显示 展开/合并 按钮
 const showCollapse = computed(() => {
-  let show = false
+  let show = false;
   props.columns.reduce((prev, current) => {
-    prev +=
-      (current.search![breakPoint.value]?.span ?? current.search?.span ?? 1) +
-      (current.search![breakPoint.value]?.offset ?? current.search?.offset ?? 0)
-    if (typeof props.searchCol !== 'number') {
+    prev += (current.search![breakPoint.value]?.span ?? current.search?.span ?? 1) + (current.search![breakPoint.value]?.offset ?? current.search?.offset ?? 0);
+    if (typeof props.searchCol !== "number") {
       if (prev >= props.searchCol[breakPoint.value]) {
-        show = true
+        show = true;
       }
     } else {
       if (prev >= props.searchCol) {
-        show = true
+        show = true;
       }
     }
-    return prev
-  }, 0)
-  return show
-})
+    return prev;
+  }, 0);
+  return show;
+});
 </script>

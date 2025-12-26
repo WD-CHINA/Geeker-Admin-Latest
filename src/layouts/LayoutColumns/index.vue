@@ -7,13 +7,7 @@
       </div>
       <ElScrollbar>
         <div class="split-list">
-          <div
-            v-for="item in menuList"
-            :key="item.path"
-            class="split-item"
-            :class="{ 'split-active': splitActive === item.path || `/${splitActive.split('/')[1]}` === item.path }"
-            @click="changeSubMenu(item)"
-          >
+          <div v-for="item in menuList" :key="item.path" class="split-item" :class="{ 'split-active': splitActive === item.path || `/${splitActive.split('/')[1]}` === item.path }" @click="changeSubMenu(item)">
             <ElIcon>
               <component :is="item.meta.icon" />
             </ElIcon>
@@ -24,16 +18,10 @@
     </div>
     <ElAside :class="{ 'not-aside': !subMenuList.length }" :style="{ width: isCollapse ? '65px' : '210px' }">
       <div class="logo flex justify-center items-center">
-        <span v-show="subMenuList.length" class="logo-text">{{ isCollapse ? 'G' : title }}</span>
+        <span v-show="subMenuList.length" class="logo-text">{{ isCollapse ? "G" : title }}</span>
       </div>
       <ElScrollbar>
-        <ElMenu
-          :router="false"
-          :default-active="activeMenu"
-          :collapse="isCollapse"
-          :unique-opened="accordion"
-          :collapse-transition="false"
-        >
+        <ElMenu :router="false" :default-active="activeMenu" :collapse="isCollapse" :unique-opened="accordion" :collapse-transition="false">
           <SubMenu :menu-list="subMenuList" />
         </ElMenu>
       </ElScrollbar>
@@ -50,64 +38,64 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'LayoutColumns',
-})
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/modules/auth'
-import { useGlobalStore } from '@/stores/modules/global'
-import MainContainer from '@/layouts/components/Main/index.vue'
-import ToolBarLeft from '@/layouts/components/Header/ToolBarLeft.vue'
-import ToolBarRight from '@/layouts/components/Header/ToolBarRight.vue'
-import SubMenu from '@/layouts/components/Menu/SubMenu.vue'
-import type { MenuOptions } from '@/api/system/menu'
+  name: "LayoutColumns"
+});
+import { ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/modules/auth";
+import { useGlobalStore } from "@/stores/modules/global";
+import MainContainer from "@/layouts/components/Main/index.vue";
+import ToolBarLeft from "@/layouts/components/Header/ToolBarLeft.vue";
+import ToolBarRight from "@/layouts/components/Header/ToolBarRight.vue";
+import SubMenu from "@/layouts/components/Menu/SubMenu.vue";
+import type { MenuOptions } from "@/api/system/menu";
 
-const title = import.meta.env.VITE_GLOB_APP_TITLE
+const title = import.meta.env.VITE_GLOB_APP_TITLE;
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const globalStore = useGlobalStore()
-const accordion = computed(() => globalStore.accordion)
-const isCollapse = computed(() => globalStore.isCollapse)
-const menuList = computed(() => authStore.showMenuListGet)
-const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string)
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const globalStore = useGlobalStore();
+const accordion = computed(() => globalStore.accordion);
+const isCollapse = computed(() => globalStore.isCollapse);
+const menuList = computed(() => authStore.showMenuListGet);
+const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string);
 
-const subMenuList = ref<MenuOptions[]>([])
-const splitActive = ref('')
+const subMenuList = ref<MenuOptions[]>([]);
+const splitActive = ref("");
 watch(
   () => [menuList, route],
   () => {
     // 当前菜单没有数据直接 return
     if (!menuList.value.length) {
-      return
+      return;
     }
-    splitActive.value = route.path
+    splitActive.value = route.path;
     const menuItem = menuList.value.filter((item: MenuOptions) => {
-      return route.path === item.path || `/${route.path.split('/')[1]}` === item.path
-    })
+      return route.path === item.path || `/${route.path.split("/")[1]}` === item.path;
+    });
     if (menuItem[0].children?.length) {
-      return (subMenuList.value = menuItem[0].children)
+      return (subMenuList.value = menuItem[0].children);
     }
-    subMenuList.value = []
+    subMenuList.value = [];
   },
   {
     deep: true,
-    immediate: true,
+    immediate: true
   }
-)
+);
 
 // change SubMenu
 const changeSubMenu = (item: MenuOptions) => {
-  splitActive.value = item.path
+  splitActive.value = item.path;
   if (item.children?.length) {
-    return (subMenuList.value = item.children)
+    return (subMenuList.value = item.children);
   }
-  subMenuList.value = []
-  router.push(item.path)
-}
+  subMenuList.value = [];
+  router.push(item.path);
+};
 </script>
 
 <style scoped lang="scss">
-@use './index';
+@use "./index";
 </style>

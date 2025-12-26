@@ -17,7 +17,7 @@ permissions:
 
 # 允许一个并发部署
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -148,7 +148,7 @@ jobs:
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: "./dist"
 
       - name: Deploy to GitHub Pages
         id: deployment
@@ -157,5 +157,5 @@ jobs:
       - name: Success message
         run: |
           echo "✅ 部署成功！"
-          echo "📱 地址: https://geeker-admin.maicss.com"
+          echo "📱 地址: https://isport-resource-platform.maicss.com"
           echo "🔗 部署时间: $(date)"

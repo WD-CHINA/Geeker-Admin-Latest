@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import IconParkOutlineTheme from '~icons/icon-park-outline/theme?width=20px&height=20px'
+import IconParkOutlineTheme from "~icons/icon-park-outline/theme?width=20px&height=20px";
 
 const openDrawer = () => {
-  window.dispatchEvent(new CustomEvent('openThemeDrawer'))
-}
+  window.dispatchEvent(new CustomEvent("openThemeDrawer"));
+};
 </script>

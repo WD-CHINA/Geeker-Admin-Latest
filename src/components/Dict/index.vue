@@ -24,60 +24,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { SelectProps } from 'element-plus'
-import { useLoadingStore } from '@/stores/modules/loading'
-import { useDictStore } from '@/stores/modules/dict'
-import { useI18n } from 'vue-i18n'
+import { computed, ref } from "vue";
+import type { SelectProps } from "element-plus";
+import { useLoadingStore } from "@/stores/modules/loading";
+import { useDictStore } from "@/stores/modules/dict";
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 interface DictProps extends Partial<SelectProps> {
-  modelValue: string | number | boolean
-  options?: SelectOption[]
-  type?: 'select' | 'radio' | 'checkbox' | 'radio-button'
-  prop?: string
-  code?: string
+  modelValue: string | number | boolean;
+  options?: SelectOption[];
+  type?: "select" | "radio" | "checkbox" | "radio-button";
+  prop?: string;
+  code?: string;
 }
 
-const dictStore = useDictStore()
-const { modelValue, options, type, code, disabled, ...rest } = defineProps<DictProps>()
-const loadingStore = useLoadingStore()
+const dictStore = useDictStore();
+const { modelValue, options, type, code, disabled, ...rest } = defineProps<DictProps>();
+const loadingStore = useLoadingStore();
 
 const emit = defineEmits<{
-  (_e: 'update:modelValue', _value: string | number | boolean): void
-}>()
+  (_e: "update:modelValue", _value: string | number | boolean): void;
+}>();
 
-const localOptions = ref<SelectOption[]>([])
+const localOptions = ref<SelectOption[]>([]);
 
 if (code) {
   dictStore.getDict(code).then(data => {
-    localOptions.value = data
-  })
+    localOptions.value = data;
+  });
 } else {
   if (!options?.length) {
-    throw new Error(t('error.notRemoteDictNeedOptions'))
+    throw new Error(t("error.notRemoteDictNeedOptions"));
   } else {
-    localOptions.value = options
+    localOptions.value = options;
   }
 }
 
 const localType = computed(() => {
   if (type) {
-    return type
+    return type;
   }
   if (localOptions.value.length <= 3) {
-    return 'radio'
+    return "radio";
   }
-  return 'select'
-})
+  return "select";
+});
 
 const value = computed({
   get: () => modelValue,
-  set: value => emit('update:modelValue', value),
-})
+  set: value => emit("update:modelValue", value)
+});
 
 const localDisabled = computed(() => {
-  return disabled || loadingStore.loading
-})
+  return disabled || loadingStore.loading;
+});
 </script>

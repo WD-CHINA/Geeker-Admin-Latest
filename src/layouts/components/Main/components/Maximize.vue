@@ -5,13 +5,13 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalStore } from '@/stores/modules/global'
-import TdesignFullscreenExit from '~icons/tdesign/fullscreen-exit?width=20px&height=20px'
+import { useGlobalStore } from "@/stores/modules/global";
+import TdesignFullscreenExit from "~icons/tdesign/fullscreen-exit?width=20px&height=20px";
 
-const globalStore = useGlobalStore()
+const globalStore = useGlobalStore();
 const exitMaximize = () => {
-  globalStore.maximize = false
-}
+  globalStore.maximize = false;
+};
 </script>
 
 <style scoped lang="scss">

@@ -1,4 +1,4 @@
-import { ElMessage } from 'element-plus'
+import { ElMessage } from "element-plus";
 
 /**
  * @description hex颜色转rgb颜色
@@ -6,14 +6,14 @@ import { ElMessage } from 'element-plus'
  * @returns {String} 返回处理后的颜色值
  */
 export function hexToRgb(str: string) {
-  const reg = /^#[0-9A-Fa-f]{6}$/
+  const reg = /^#[0-9A-Fa-f]{6}$/;
   if (!reg.test(str)) {
-    return ElMessage.warning('输入错误的hex')
+    return ElMessage.warning("输入错误的hex");
   }
   return str
-    .replace('#', '')
+    .replace("#", "")
     .match(/../g)
-    ?.map(item => parseInt(item, 16))
+    ?.map(item => parseInt(item, 16));
 }
 
 /**
@@ -24,7 +24,7 @@ export function hexToRgb(str: string) {
  * @returns {String} 返回处理后的颜色值
  */
 export function rgbToHex(r: number, g: number, b: number) {
-  return `#${[r.toString(16).padStart(2, '0'), g.toString(16).padStart(2, '0'), b.toString(16).padStart(2, '0')].join('')}`
+  return `#${[r.toString(16).padStart(2, "0"), g.toString(16).padStart(2, "0"), b.toString(16).padStart(2, "0")].join("")}`;
 }
 
 /**
@@ -34,13 +34,9 @@ export function rgbToHex(r: number, g: number, b: number) {
  * @returns {String} 返回处理后的颜色值
  */
 export function getDarkColor(color: string, level: number) {
-  const rgb = hexToRgb(color)
+  const rgb = hexToRgb(color);
   if (rgb) {
-    return rgbToHex(
-      Math.round(20.5 * level + rgb[0] * (1 - level)),
-      Math.round(20.5 * level + rgb[1] * (1 - level)),
-      Math.round(20.5 * level + rgb[2] * (1 - level))
-    )
+    return rgbToHex(Math.round(20.5 * level + rgb[0] * (1 - level)), Math.round(20.5 * level + rgb[1] * (1 - level)), Math.round(20.5 * level + rgb[2] * (1 - level)));
   }
 }
 
@@ -51,12 +47,8 @@ export function getDarkColor(color: string, level: number) {
  * @returns {String} 返回处理后的颜色值
  */
 export function getLightColor(color: string, level: number) {
-  const rgb = hexToRgb(color)
+  const rgb = hexToRgb(color);
   if (rgb) {
-    return rgbToHex(
-      Math.round(255 * level + rgb[0] * (1 - level)),
-      Math.round(255 * level + rgb[1] * (1 - level)),
-      Math.round(255 * level + rgb[2] * (1 - level))
-    )
+    return rgbToHex(Math.round(255 * level + rgb[0] * (1 - level)), Math.round(255 * level + rgb[1] * (1 - level)), Math.round(255 * level + rgb[2] * (1 - level)));
   }
 }

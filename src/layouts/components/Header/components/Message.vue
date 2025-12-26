@@ -12,35 +12,35 @@
             <div class="message-item">
               <img src="@/assets/images/msg01.png" alt="" class="message-icon" />
               <div class="message-content">
-                <span class="message-title">一键三连 Geeker-Admin 🧡</span>
+                <span class="message-title">一键三连 isport-resource-platform 🧡</span>
                 <span class="message-date">一分钟前</span>
               </div>
             </div>
             <div class="message-item">
               <img src="@/assets/images/msg02.png" alt="" class="message-icon" />
               <div class="message-content">
-                <span class="message-title">一键三连 Geeker-Admin 💙</span>
+                <span class="message-title">一键三连 isport-resource-platform 💙</span>
                 <span class="message-date">一小时前</span>
               </div>
             </div>
             <div class="message-item">
               <img src="@/assets/images/msg03.png" alt="" class="message-icon" />
               <div class="message-content">
-                <span class="message-title">一键三连 Geeker-Admin 💚</span>
+                <span class="message-title">一键三连 isport-resource-platform 💚</span>
                 <span class="message-date">半天前</span>
               </div>
             </div>
             <div class="message-item">
               <img src="@/assets/images/msg04.png" alt="" class="message-icon" />
               <div class="message-content">
-                <span class="message-title">一键三连 Geeker-Admin 💜</span>
+                <span class="message-title">一键三连 isport-resource-platform 💜</span>
                 <span class="message-date">一星期前</span>
               </div>
             </div>
             <div class="message-item">
               <img src="@/assets/images/msg05.png" alt="" class="message-icon" />
               <div class="message-content">
-                <span class="message-title">一键三连 Geeker-Admin 💛</span>
+                <span class="message-title">一键三连 isport-resource-platform 💛</span>
                 <span class="message-date">一个月前</span>
               </div>
             </div>
@@ -64,9 +64,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import LineMdBell from '~icons/line-md/bell?width=20px&height=20px'
-const activeName = ref('first')
+import { ref } from "vue";
+import LineMdBell from "~icons/line-md/bell?width=20px&height=20px";
+const activeName = ref("first");
 </script>
 
 <style scoped lang="scss">
